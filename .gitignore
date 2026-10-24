@@ -1,0 +1,25 @@
+# --- Android / Gradle ---
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.hprof
+
+# --- signing / secrets ---
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+.env
+
+# --- this repo ---
+# third-party reference checkout (android/skills), not part of the project
+third_party/
+.dsh-write-test.txt
+tools/*.log
