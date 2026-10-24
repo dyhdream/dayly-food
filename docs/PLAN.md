@@ -28,7 +28,7 @@
 | Key 存储 | 自封装 AndroidKeystore + AES-GCM（不用已停更的 security-crypto） |
 | 图片 | Coil 3；自写压缩（长边 1024 / JPEG q80 / <800KB） |
 
-AI 供应商抽象：预设阿里百炼 DashScope、智谱 GLM、月之暗面 Kimi、火山方舟豆包，另支持自定义 BaseUrl。
+AI 供应商抽象：直接对标 `fud-ai` 的 `ApiFormat` 结构（`GEMINI` / `OPENAI_COMPATIBLE` / `ANTHROPIC` / `LOCAL`），vision / text 模型分表 + 自定义 BaseUrl。预设表换为国内端点：百炼（北京 `dashscope.aliyuncs.com`）、智谱 GLM、月之暗面 Kimi、火山方舟豆包。详见 [FUDAI-COMPARISON.md](./FUDAI-COMPARISON.md)。
 
 ## 3. 数据模型（Room）
 

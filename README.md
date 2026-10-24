@@ -39,6 +39,8 @@ AI 侧统一走 OpenAI 兼容协议，预设阿里百炼 / 智谱 GLM / 月之�
 
 - [实施方案](docs/PLAN.md) —— 数据模型、计算口径、AI 管道、里程碑
 - [同类产品调研](docs/RESEARCH.md) —— 开源竞品与中文食物数据源
+- [fud-ai 架构核对](docs/FUDAI-COMPARISON.md) —— 逐文件对照：借什么、重造什么
+- [GitHub 连接修复](docs/GITHUB-CONNECTIVITY.md) —— 本机 hosts 被 Watt 改写的病因与修复
 
 ## 项目状态
 
