@@ -51,9 +51,27 @@ class UpdateViewModel @Inject constructor(
         }
     }
 
+    private var lastAutoCheckAt = 0L
+
+    /**
+     * Re-check when the app comes back to the foreground. Throttled so switching apps
+     * does not spam the API; the manual button always bypasses it.
+     */
+    fun checkSilently() = viewModelScope.launch {
+        if (_state.value is State.Checking || _state.value is State.Downloading) return@launch
+        val now = System.currentTimeMillis()
+        if (now - lastAutoCheckAt < AUTO_CHECK_INTERVAL_MS) return@launch
+        lastAutoCheckAt = now
+        check()
+    }
+
     fun reset() {
         _state.value = State.Idle
     }
 
     fun openReleasePage() = installer.openReleasePage()
+
+    companion object {
+        private const val AUTO_CHECK_INTERVAL_MS = 10 * 60 * 1000L
+    }
 }

@@ -374,7 +374,6 @@ private fun ResultRow(label: String, value: String) {
 @Composable
 fun HomeScreen(
     onAdd: (String, Long) -> Unit,
-    onProfile: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
 ) {
     val profile by vm.profile.collectAsStateWithLifecycle(null)
@@ -411,19 +410,13 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column {
-                Text("每日食记", style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    "$weekday · $dayLabel",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            FilledTonalIconButton(onClick = onProfile) {
-                Icon(Icons.Default.Settings, contentDescription = "设置")
-            }
+        Column(Modifier.padding(top = 4.dp)) {
+            Text("每日食记", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "$weekday · $dayLabel",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

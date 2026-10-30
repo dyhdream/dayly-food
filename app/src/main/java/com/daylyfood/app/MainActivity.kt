@@ -34,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.domain.guessMeal
 import com.daylyfood.app.ui.ComposeDishScreen
@@ -76,7 +78,18 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     // The one allowed post-start network call: delayed, silent, never on the critical path.
     LaunchedEffect(Unit) {
         delay(3_000)
-        updateVm.check()
+        updateVm.checkSilently()
+    }
+
+    // Coming back from the background re-checks too, so a release published while the app
+    // sat in the background is picked up without killing the process.
+    var firstResume by remember { mutableStateOf(true) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (firstResume) {
+            firstResume = false
+        } else {
+            updateVm.checkSilently()
+        }
     }
 
     if (!ready) {
@@ -159,7 +172,6 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                                 addMeal = meal
                                 addDay = day
                             },
-                            onProfile = { tab = 2 },
                         )
 
                         1 -> DishesScreen(onCompose = { composing = true })
