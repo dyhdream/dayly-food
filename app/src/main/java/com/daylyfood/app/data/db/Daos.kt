@@ -52,7 +52,44 @@ interface DiaryDao {
 
     @Query("DELETE FROM diary_entry WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("SELECT * FROM diary_entry WHERE epochDay = :day ORDER BY id")
+    suspend fun list(day: Long): List<DiaryEntryEntity>
+
+    @Insert
+    suspend fun insertAll(entries: List<DiaryEntryEntity>)
+
+    /** Per-100g values are rebuilt from the stored snapshots, so quick-add needs no food lookup. */
+    @Query(
+        """
+        SELECT nameSnapshot AS name,
+               MAX(grams) AS grams,
+               MAX(kcal * 100.0 / grams) AS kcal100,
+               MAX(protein * 100.0 / grams) AS protein100,
+               MAX(fat * 100.0 / grams) AS fat100,
+               MAX(carb * 100.0 / grams) AS carb100,
+               MAX(foodId) AS foodId,
+               MAX(createdAt) AS createdAt
+        FROM diary_entry
+        WHERE grams > 0
+        GROUP BY nameSnapshot
+        ORDER BY createdAt DESC
+        LIMIT 8
+        """
+    )
+    fun recent(): Flow<List<RecentFood>>
 }
+
+data class RecentFood(
+    val name: String,
+    val grams: Double,
+    val kcal100: Double,
+    val protein100: Double,
+    val fat100: Double,
+    val carb100: Double,
+    val foodId: String?,
+    val createdAt: Long,
+)
 
 @Dao
 interface ProfileDao {

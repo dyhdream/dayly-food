@@ -1,6 +1,7 @@
 package com.daylyfood.app.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -38,6 +40,9 @@ import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.ServingEntity
 import com.daylyfood.app.domain.Nutrition
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 private val MEALS = listOf(
@@ -155,6 +160,15 @@ fun HomeScreen(
 ) {
     val profile by vm.profile.collectAsStateWithLifecycle(null)
     val entries by vm.entries.collectAsStateWithLifecycle(emptyList())
+    val recent by vm.recent.collectAsStateWithLifecycle(emptyList())
+    val day by vm.day.collectAsStateWithLifecycle(LocalDate.now().toEpochDay())
+
+    val today = remember { LocalDate.now().toEpochDay() }
+    val dayLabel = when (today - day) {
+        0L -> "今天"
+        1L -> "昨天"
+        else -> LocalDate.ofEpochDay(day).format(DateTimeFormatter.ofPattern("M月d日"))
+    }
 
     val target = profile?.let {
         Nutrition.targetKcal(Nutrition.tdee(Nutrition.bmr(it.sex, it.age, it.heightCm, it.weightKg), it.activity), it.goal, it.sex)
@@ -175,6 +189,16 @@ fun HomeScreen(
             TextButton(onClick = onProfile) { Text("设置") }
         }
 
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = { vm.shiftDay(-1) }) { Text("‹ 前一天") }
+            Text(dayLabel, style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = { vm.shiftDay(1) }, enabled = day < today) { Text("后一天 ›") }
+        }
+
         Text(
             "目标 ${target.roundToInt()} · 已摄入 ${eaten.roundToInt()} · 剩余 ${(target - eaten).roundToInt()} kcal",
             style = MaterialTheme.typography.titleMedium,
@@ -188,7 +212,30 @@ fun HomeScreen(
             )
         }
 
+        if (recent.isNotEmpty()) {
+            HorizontalDivider()
+            Text("最近吃过 · 点一下直接记", style = MaterialTheme.typography.titleSmall)
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                recent.forEach { item ->
+                    AssistChip(
+                        onClick = { vm.quickAdd(item, mealForNow()) },
+                        label = { Text("${item.name} ${item.grams.roundToInt()}g") },
+                    )
+                }
+            }
+        }
+
         HorizontalDivider()
+
+        if (entries.isEmpty()) {
+            Text("这一天还没有记录", style = MaterialTheme.typography.bodySmall)
+            if (today - day >= 1) {
+                TextButton(onClick = { vm.copyPreviousDay() }) { Text("复制前一天的记录") }
+            }
+        }
 
         MEALS.forEach { (key, label) ->
             val mealEntries = entries.filter { it.meal == key }
@@ -208,7 +255,7 @@ fun HomeScreen(
             }
             mealEntries.forEach { entry ->
                 Row(
-                    Modifier.fillMaxWidth().clickable { },
+                    Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -226,6 +273,14 @@ fun HomeScreen(
         }
         Spacer(Modifier.height(24.dp))
     }
+}
+
+/** Guess the meal slot from the clock so quick-add needs zero decisions. */
+private fun mealForNow(): String = when (LocalTime.now().hour) {
+    in 5..10 -> "breakfast"
+    in 11..14 -> "lunch"
+    in 17..21 -> "dinner"
+    else -> "snack"
 }
 
 @Composable

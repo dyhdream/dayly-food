@@ -9,13 +9,16 @@ import com.daylyfood.app.data.db.FoodDao
 import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileDao
 import com.daylyfood.app.data.db.ProfileEntity
+import com.daylyfood.app.data.db.RecentFood
 import com.daylyfood.app.data.db.ServingEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -51,15 +54,56 @@ class HomeViewModel @Inject constructor(
     private val profileDao: ProfileDao,
 ) : ViewModel() {
 
-    val today: Long = LocalDate.now().toEpochDay()
+    private val _day = MutableStateFlow(LocalDate.now().toEpochDay())
+    val day: StateFlow<Long> = _day.asStateFlow()
 
     val profile: StateFlow<ProfileEntity?> = profileDao.observe()
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val entries: StateFlow<List<DiaryEntryEntity>> = diaryDao.observe(today)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val entries: StateFlow<List<DiaryEntryEntity>> = _day
+        .flatMapLatest { diaryDao.observe(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    val recent: StateFlow<List<RecentFood>> = diaryDao.recent()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun shiftDay(delta: Long) {
+        val today = LocalDate.now().toEpochDay()
+        _day.value = (_day.value + delta).coerceAtMost(today)
+    }
+
     fun delete(id: Long) = viewModelScope.launch { diaryDao.delete(id) }
+
+    /** One tap re-records a recent food at its last portion, no search needed. */
+    fun quickAdd(item: RecentFood, meal: String) = viewModelScope.launch {
+        val factor = item.grams / 100.0
+        diaryDao.insert(
+            DiaryEntryEntity(
+                epochDay = _day.value,
+                meal = meal,
+                foodId = item.foodId,
+                nameSnapshot = item.name,
+                grams = item.grams,
+                kcal = item.kcal100 * factor,
+                protein = item.protein100 * factor,
+                fat = item.fat100 * factor,
+                carb = item.carb100 * factor,
+                createdAt = System.currentTimeMillis(),
+            )
+        )
+    }
+
+    fun copyPreviousDay() = viewModelScope.launch {
+        val source = diaryDao.list(_day.value - 1)
+        if (source.isEmpty()) return@launch
+        val now = System.currentTimeMillis()
+        diaryDao.insertAll(
+            source.map {
+                it.copy(id = 0, epochDay = _day.value, createdAt = now)
+            }
+        )
+    }
 }
 
 @HiltViewModel

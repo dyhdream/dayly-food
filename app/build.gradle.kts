@@ -14,14 +14,17 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // shortcut: release is debug-signed so we can sideload test builds;
+            // replace with a real keystore before publishing anywhere.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
