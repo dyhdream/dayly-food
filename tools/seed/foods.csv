@@ -1,32 +1,32 @@
-id,name,category,brand,base_unit,kcal_100,protein_100,fat_100,carb_100,fiber_100,sodium_100mg,source,source_url,confidence,verified,notes
-F001,米饭(蒸),主食,,g,116,2.6,0.3,25.9,0.3,2.5,cn_fct6_ref,,high,1,白米饭蒸熟
-F002,馒头,主食,,g,223,7.0,1.1,47.0,1.3,165,cn_fct6_ref,,high,1,
-F003,白粥,主食,,g,46,1.1,0.2,9.9,0.1,2,cn_fct6_ref,,high,1,稀饭
-F004,面条(煮),主食,,g,110,3.9,0.4,22.8,0.5,180,cn_fct6_ref,,medium,1,水煮面条
-F005,猪肉水饺(煮),主食,,g,240,9.0,10.0,28.0,0.8,480,estimate,,medium,0,馅料配比差异大
-F006,小笼包,主食,,g,230,8.0,9.0,29.0,0.6,420,estimate,,medium,0,
-F007,油条,主食,,g,388,6.9,17.6,51.0,0.9,585,cn_fct6_ref,,high,1,
-F008,蛋炒饭,主食,,g,175,5.0,5.5,26.0,0.5,420,estimate,,medium,0,按家常做法含油8g/份
-F009,鸡蛋(煮),蛋类,,g,144,13.3,8.8,2.8,0,131,cn_fct6_ref,,high,1,
-F010,番茄炒蛋,家常菜,,g,110,5.5,7.5,6.0,1.0,420,estimate,,medium,0,含油约10g/份
-F011,宫保鸡丁,家常菜,,g,180,13.0,11.0,8.0,1.2,650,estimate,,medium,0,含花生与辣油
-F012,红烧肉,家常菜,,g,380,10.0,35.0,6.0,0,520,estimate,,medium,0,五花肉肥瘦比影响大
-F013,鱼香肉丝,家常菜,,g,170,10.0,11.0,8.5,1.0,700,estimate,,medium,0,糖醋口含糖
-F014,清炒青菜,家常菜,,g,45,1.8,3.0,3.0,1.2,350,estimate,,medium,0,小白菜含油8g/份
-F015,麻婆豆腐,家常菜,,g,120,8.0,8.0,4.5,0.8,600,estimate,,medium,0,
-F016,紫菜蛋花汤,汤羹,,g,30,2.0,1.5,2.0,0.3,380,estimate,,medium,0,
-F017,凉拌黄瓜,凉菜,,g,40,1.0,2.5,4.0,1.0,300,estimate,,medium,0,含香油与糖
-F018,肯德基 香辣鸡腿堡,快餐连锁,肯德基,g,246,12.5,12.0,25.0,,560,brand_official,,low,0,官网约512kcal/个;每100g由208g反推;须按官网复核
-F019,麦当劳 巨无霸,快餐连锁,麦当劳,g,248,13.0,12.4,22.0,,500,brand_official,,low,0,官网约540kcal/个;每100g由218g反推;须按官网复核
-F020,蜜雪冰城 珍珠奶茶,饮品,蜜雪冰城,ml,75,0.6,2.3,12.8,,25,brand_official,,low,0,标准糖;每100ml由375kcal/500ml反推;须按官网复核
-F021,瑞幸 生椰拿铁,饮品,瑞幸,ml,48,1.2,2.4,5.6,,22,brand_official,,low,0,不额外加糖;每100ml由240kcal/500ml反推;须按官网复核
-F022,可口可乐(含糖),饮品,可口可乐,ml,43,0,0,10.6,0,12,usda_ref,,high,1,罐装经典款
-F023,全脂牛奶,饮品,,ml,54,3.0,3.2,3.4,0,44,cn_fct6_ref,,high,1,
-F024,无糖豆浆,饮品,,ml,31,3.0,1.6,1.2,0.5,15,cn_fct6_ref,,medium,1,
-F025,苹果,水果,,g,53,0.4,0.2,13.7,1.7,1.3,cn_fct6_ref,,high,1,红富士可食部
-F026,香蕉,水果,,g,93,1.4,0.2,22.0,1.2,0.8,cn_fct6_ref,,high,1,可食部
-F027,混合坚果,坚果零食,,g,600,18.0,52.0,20.0,7.0,120,estimate,,medium,0,仁类占比影响大
-F028,薯片,坚果零食,,g,540,6.0,34.0,52.0,4.0,500,estimate,,medium,0,
-F029,煎饼果子,早餐,,g,250,8.0,10.0,32.0,1.5,600,estimate,,medium,0,含薄脆与酱料
-F030,兰州牛肉面,主食,,g,120,6.0,3.5,17.0,0.8,620,estimate,,medium,0,含汤;每100g按整碗含汤计
-F031,黄焖鸡米饭,快餐连锁,,g,143,7.0,4.7,17.5,0.6,330,estimate,,medium,0,含米饭;每100g按整份550g反推
+id,name,kind,basis,category,brand,base_unit,kcal_100,protein_100,fat_100,carb_100,fiber_100,sodium_100mg,source,source_url,confidence,verified,notes
+F001,大米(生),INGREDIENT,RAW,主食,,g,346,7.4,0.8,77.9,0.7,3.8,cn_fct6_ref,,high,1,生重基准
+F002,面粉(标准粉),INGREDIENT,RAW,主食,,g,366,11.2,1.5,73.6,2.1,3.1,cn_fct6_ref,,high,1,生重
+F003,鸡蛋(生),INGREDIENT,RAW,蛋类,,g,144,13.3,8.8,2.8,0,131,cn_fct6_ref,,high,1,生重
+F004,番茄,INGREDIENT,RAW,家常菜,,g,20,0.9,0.2,4.0,0.5,5,cn_fct6_ref,,high,1,生重
+F005,黄瓜,INGREDIENT,RAW,凉菜,,g,16,0.8,0.2,2.9,0.5,5,cn_fct6_ref,,high,1,生重
+F006,小白菜,INGREDIENT,RAW,家常菜,,g,15,1.5,0.3,2.7,1.1,74,cn_fct6_ref,,high,1,生重
+F007,土豆,INGREDIENT,RAW,家常菜,,g,77,2.0,0.2,17.2,0.7,2.7,cn_fct6_ref,,high,1,生重
+F008,青椒,INGREDIENT,RAW,家常菜,,g,22,1.0,0.2,5.4,1.4,3.3,cn_fct6_ref,,high,1,生重
+F009,猪肉(五花),INGREDIENT,RAW,家常菜,,g,395,13.6,30.6,2.4,0,59,cn_fct6_ref,,high,1,生重
+F010,猪里脊,INGREDIENT,RAW,家常菜,,g,155,20.2,7.9,0.7,0,43,cn_fct6_ref,,high,1,生重
+F011,鸡胸肉,INGREDIENT,RAW,家常菜,,g,133,19.4,5.0,2.5,0,63,cn_fct6_ref,,high,1,生重
+F012,鸡腿肉,INGREDIENT,RAW,家常菜,,g,181,16.0,13.0,0,0,85,cn_fct6_ref,,high,1,生重
+F013,花生米(生),INGREDIENT,RAW,坚果零食,,g,574,24.8,44.3,21.7,5.5,3.6,cn_fct6_ref,,high,1,生重
+F014,北豆腐,INGREDIENT,RAW,家常菜,,g,98,12.2,4.8,2.0,0.5,7,cn_fct6_ref,,high,1,生重
+F015,食用油(大豆油),INGREDIENT,RAW,调味,,g,899,0,99.9,0,0,0,cn_fct6_ref,,high,1,配方里显式写克数
+F016,白砂糖,INGREDIENT,RAW,调味,,g,400,0,0,99.9,0,0,cn_fct6_ref,,high,1,
+F017,生抽(酱油),INGREDIENT,RAW,调味,,ml,60,6.0,0,8.0,0,6000,cn_fct6_ref,,high,1,钠含量高
+F018,食盐,INGREDIENT,RAW,调味,,g,0,0,0,0,0,39000,cn_fct6_ref,,high,1,
+F019,全脂牛奶,INGREDIENT,RAW,饮品,,ml,54,3.0,3.2,3.4,0,44,cn_fct6_ref,,high,1,
+F020,苹果,INGREDIENT,RAW,水果,,g,53,0.4,0.2,13.7,1.7,1.3,cn_fct6_ref,,high,1,可食部
+F021,香蕉,INGREDIENT,RAW,水果,,g,93,1.4,0.2,22.0,1.2,0.8,cn_fct6_ref,,high,1,可食部
+F022,混合坚果仁,INGREDIENT,RAW,坚果零食,,g,600,18.0,52.0,20.0,7.0,120,estimate,,medium,0,仁类占比影响大
+F101,米饭(熟),DISH,COOKED,主食,,g,138.4,2.96,0.32,31.16,0.28,1.5,derived,,high,1,由配方R01计算得出
+F102,白粥,DISH,COOKED,主食,,g,34.6,0.74,0.08,7.79,0.07,0.4,derived,,high,1,由配方R02计算得出
+F103,番茄炒蛋,DISH,COOKED,家常菜,,g,98.6,5.21,6.62,4.76,0.37,148,derived,,medium,0,由配方R03计算;数值随油量变化
+F104,青椒肉丝,DISH,COOKED,家常菜,,g,110.8,9.29,6.75,4.00,0.60,272,derived,,medium,0,由配方R04计算
+F105,红烧肉,DISH,COOKED,家常菜,,g,481.0,15.00,36.35,8.49,0,314,derived,,medium,0,由配方R05计算
+F201,可口可乐(含糖),PACKAGED,AS_SOLD,饮品,可口可乐,ml,43,0,0,10.6,0,12,usda_ref,,high,1,按包装营养标签
+F202,肯德基 香辣鸡腿堡,PACKAGED,AS_SOLD,快餐连锁,肯德基,g,246,12.5,12.0,25.0,,560,brand_official,,low,0,官网约512kcal/个;每100g由208g反推;须按官网复核
+F203,麦当劳 巨无霸,PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,248,13.0,12.4,22.0,,500,brand_official,,low,0,官网约540kcal/个;每100g由218g反推;须按官网复核
+F204,蜜雪冰城 珍珠奶茶,PACKAGED,AS_SOLD,饮品,蜜雪冰城,ml,75,0.6,2.3,12.8,,25,brand_official,,low,0,标准糖;每100ml由375kcal/500ml反推;须按官网复核
