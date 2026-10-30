@@ -21,12 +21,117 @@ F019,全脂牛奶,INGREDIENT,RAW,饮品,,ml,54,3.0,3.2,3.4,0,44,cn_fct6_ref,,hig
 F020,苹果,INGREDIENT,RAW,水果,,g,53,0.4,0.2,13.7,1.7,1.3,cn_fct6_ref,,high,1,可食部
 F021,香蕉,INGREDIENT,RAW,水果,,g,93,1.4,0.2,22.0,1.2,0.8,cn_fct6_ref,,high,1,可食部
 F022,混合坚果仁,INGREDIENT,RAW,坚果零食,,g,600,18.0,52.0,20.0,7.0,120,estimate,,medium,0,仁类占比影响大
-F101,米饭(熟),DISH,COOKED,主食,,g,138.4,2.96,0.32,31.16,0.28,1.5,derived,,high,1,由配方R01计算得出
-F102,白粥,DISH,COOKED,主食,,g,34.6,0.74,0.08,7.79,0.07,0.4,derived,,high,1,由配方R02计算得出
-F103,番茄炒蛋,DISH,COOKED,家常菜,,g,98.6,5.21,6.62,4.76,0.37,148,derived,,medium,0,由配方R03计算;数值随油量变化
-F104,青椒肉丝,DISH,COOKED,家常菜,,g,110.8,9.29,6.75,4.00,0.60,272,derived,,medium,0,由配方R04计算
-F105,红烧肉,DISH,COOKED,家常菜,,g,481.0,15.00,36.35,8.49,0,314,derived,,medium,0,由配方R05计算
+F101,米饭(熟),DISH,COOKED,主食,,g,138.4,2.96,0.32,31.16,0.28,1.52,derived,,high,1,由配方R01计算得出
+F102,白粥,DISH,COOKED,主食,,g,34.6,0.74,0.08,7.79,0.07,0.38,derived,,high,1,由配方R02计算得出
+F103,番茄炒蛋,DISH,COOKED,家常菜,,g,98.59,5.21,6.62,4.76,0.34,183.1,derived,,medium,0,由配方R03计算;数值随油量变化
+F104,青椒肉丝,DISH,COOKED,家常菜,,g,110.8,9.29,6.75,4,0.87,269.98,derived,,medium,0,由配方R04计算
+F105,红烧肉,DISH,COOKED,家常菜,,g,481.04,15,36.35,8.49,0,491.79,derived,,medium,0,由配方R05计算
 F201,可口可乐(含糖),PACKAGED,AS_SOLD,饮品,可口可乐,ml,43,0,0,10.6,0,12,usda_ref,,high,1,按包装营养标签
 F202,肯德基 香辣鸡腿堡,PACKAGED,AS_SOLD,快餐连锁,肯德基,g,246,12.5,12.0,25.0,,560,brand_official,,low,0,官网约512kcal/个;每100g由208g反推;须按官网复核
 F203,麦当劳 巨无霸,PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,248,13.0,12.4,22.0,,500,brand_official,,low,0,官网约540kcal/个;每100g由218g反推;须按官网复核
 F204,蜜雪冰城 珍珠奶茶,PACKAGED,AS_SOLD,饮品,蜜雪冰城,ml,75,0.6,2.3,12.8,,25,brand_official,,low,0,标准糖;每100ml由375kcal/500ml反推;须按官网复核
+F030,小米(生),INGREDIENT,RAW,主食,,g,361,9.0,3.1,75.1,1.6,4.3,cn_fct6_ref,,high,1,生重
+F031,玉米(鲜),INGREDIENT,RAW,主食,,g,112,4.0,1.2,22.8,2.9,1.1,cn_fct6_ref,,high,1,生重;甜玉米
+F032,红薯,INGREDIENT,RAW,主食,,g,106,1.1,0.2,25.2,1.6,28.5,cn_fct6_ref,,high,1,生重
+F033,燕麦片(生),INGREDIENT,RAW,主食,,g,377,15.0,6.7,66.9,5.3,3.7,cn_fct6_ref,,high,1,生重
+F034,糯米(生),INGREDIENT,RAW,主食,,g,350,7.3,1.0,78.3,0.8,1.5,cn_fct6_ref,,high,1,生重
+F035,挂面(生),INGREDIENT,RAW,主食,,g,348,11.4,0.9,75.6,0.9,185,cn_fct6_ref,,high,1,生重
+F036,黄豆(生),INGREDIENT,RAW,主食,,g,390,35.0,16.0,34.2,15.5,2.2,cn_fct6_ref,,high,1,生重
+F037,绿豆(生),INGREDIENT,RAW,主食,,g,316,21.6,0.8,62.0,6.4,3.2,cn_fct6_ref,,high,1,生重
+F038,红豆(生),INGREDIENT,RAW,主食,,g,309,20.2,0.6,63.4,7.7,2.2,cn_fct6_ref,,high,1,生重
+F039,豆腐皮,INGREDIENT,RAW,家常菜,,g,409,44.6,17.4,18.8,0.2,9.4,cn_fct6_ref,,high,1,生重
+F040,豆浆(无糖),INGREDIENT,RAW,饮品,,ml,31,3.0,1.6,1.2,1.1,3.0,cn_fct6_ref,,high,1,
+F041,鸡蛋清,INGREDIENT,RAW,蛋类,,g,60,11.6,0.1,3.1,0,79,cn_fct6_ref,,high,1,
+F042,鸭蛋,INGREDIENT,RAW,蛋类,,g,180,12.6,13.0,3.1,0,106,cn_fct6_ref,,high,1,生重
+F043,脱脂牛奶,INGREDIENT,RAW,饮品,,ml,33,3.4,0.2,4.8,0,42,cn_fct6_ref,,high,1,
+F044,原味酸奶,INGREDIENT,RAW,饮品,,ml,72,2.5,2.7,9.3,0,39,cn_fct6_ref,,high,1,
+F045,奶酪,INGREDIENT,RAW,饮品,,g,328,25.7,23.5,3.5,0,584,cn_fct6_ref,,high,1,
+F046,鸡翅,INGREDIENT,RAW,家常菜,,g,194,17.4,11.8,4.6,0,50,cn_fct6_ref,,high,1,生重;带骨
+F047,鸭肉,INGREDIENT,RAW,家常菜,,g,240,15.5,19.7,0.2,0,69,cn_fct6_ref,,high,1,生重
+F048,牛肉(瘦),INGREDIENT,RAW,家常菜,,g,106,20.2,2.3,1.2,0,53,cn_fct6_ref,,high,1,生重
+F049,羊肉(瘦),INGREDIENT,RAW,家常菜,,g,118,20.5,3.9,0.2,0,69,cn_fct6_ref,,high,1,生重
+F050,虾仁,INGREDIENT,RAW,家常菜,,g,93,18.6,0.8,2.8,0,165,cn_fct6_ref,,high,1,生重
+F051,鲈鱼,INGREDIENT,RAW,家常菜,,g,105,18.6,3.4,0,0,144,cn_fct6_ref,,high,1,生重;可食部
+F052,鲫鱼,INGREDIENT,RAW,家常菜,,g,108,17.1,2.7,3.8,0,41,cn_fct6_ref,,high,1,生重;可食部
+F053,带鱼,INGREDIENT,RAW,家常菜,,g,127,17.7,4.9,3.1,0,150,cn_fct6_ref,,high,1,生重
+F054,蛤蜊,INGREDIENT,RAW,家常菜,,g,62,10.1,1.1,2.8,0,425,cn_fct6_ref,,high,1,生重;可食部
+F055,火腿肠,INGREDIENT,RAW,快餐连锁,,g,212,14.0,10.4,15.6,0,771,public_dataset,,medium,0,加工肉制品
+F056,培根,INGREDIENT,RAW,家常菜,,g,181,22.3,9.0,2.6,0,763,public_dataset,,medium,0,加工肉制品
+F057,胡萝卜,INGREDIENT,RAW,家常菜,,g,39,1.0,0.2,8.8,1.1,71,cn_fct6_ref,,high,1,生重
+F058,白萝卜,INGREDIENT,RAW,家常菜,,g,21,0.9,0.1,5.0,1.0,62,cn_fct6_ref,,high,1,生重
+F059,大白菜,INGREDIENT,RAW,家常菜,,g,17,1.5,0.1,3.2,0.8,57,cn_fct6_ref,,high,1,生重
+F060,菠菜,INGREDIENT,RAW,家常菜,,g,28,2.6,0.3,4.5,1.7,85,cn_fct6_ref,,high,1,生重
+F061,西兰花,INGREDIENT,RAW,家常菜,,g,36,4.1,0.6,4.3,1.6,19,cn_fct6_ref,,high,1,生重
+F062,橙子,INGREDIENT,RAW,水果,,g,48,0.8,0.2,11.1,0.6,1.2,cn_fct6_ref,,high,1,可食部
+F063,梨,INGREDIENT,RAW,水果,,g,51,0.4,0.2,13.3,3.1,2.1,cn_fct6_ref,,high,1,可食部
+F064,葡萄,INGREDIENT,RAW,水果,,g,44,0.5,0.2,10.3,0.4,1.3,cn_fct6_ref,,high,1,可食部
+F065,西瓜,INGREDIENT,RAW,水果,,g,31,0.6,0.1,7.9,0.3,3.2,cn_fct6_ref,,high,1,可食部
+F066,草莓,INGREDIENT,RAW,水果,,g,32,1.0,0.2,7.1,1.1,4.2,cn_fct6_ref,,high,1,可食部
+F067,猕猴桃,INGREDIENT,RAW,水果,,g,61,0.8,0.6,14.5,2.6,10,cn_fct6_ref,,high,1,可食部
+F068,蓝莓,INGREDIENT,RAW,水果,,g,57,0.7,0.3,14.5,2.4,1,cn_fct6_ref,,high,1,可食部
+F069,芒果,INGREDIENT,RAW,水果,,g,35,0.6,0.2,8.3,1.3,2.8,cn_fct6_ref,,high,1,可食部
+F070,桃,INGREDIENT,RAW,水果,,g,51,0.9,0.1,12.2,1.3,5.7,cn_fct6_ref,,high,1,可食部
+F071,火龙果,INGREDIENT,RAW,水果,,g,55,1.1,0.2,13.3,1.6,2.7,cn_fct6_ref,,high,1,可食部
+F072,柚子,INGREDIENT,RAW,水果,,g,42,0.8,0.2,9.5,0.4,3,cn_fct6_ref,,high,1,可食部
+F073,橘子,INGREDIENT,RAW,水果,,g,51,0.7,0.2,11.9,0.4,1.4,cn_fct6_ref,,high,1,可食部
+F074,菠萝,INGREDIENT,RAW,水果,,g,44,0.5,0.1,10.8,1.3,0.8,cn_fct6_ref,,high,1,可食部
+F075,樱桃,INGREDIENT,RAW,水果,,g,46,1.1,0.2,10.2,0.3,8,cn_fct6_ref,,high,1,可食部
+F076,核桃仁,INGREDIENT,RAW,坚果零食,,g,646,14.9,58.8,19.1,9.5,6.4,cn_fct6_ref,,high,1,生重;去壳
+F077,杏仁,INGREDIENT,RAW,坚果零食,,g,578,21.2,50.6,21.6,11.8,8.3,cn_fct6_ref,,high,1,生重
+F078,黑芝麻,INGREDIENT,RAW,调味,,g,559,19.1,46.1,24.0,14.0,8.3,cn_fct6_ref,,high,1,
+F079,葵花籽,INGREDIENT,RAW,坚果零食,,g,606,22.6,52.8,17.3,4.8,5.5,cn_fct6_ref,,high,1,生重;去壳
+F080,开心果,INGREDIENT,RAW,坚果零食,,g,614,20.6,53.0,21.9,8.2,270,cn_fct6_ref,,high,1,生重;去壳
+F081,腰果,INGREDIENT,RAW,坚果零食,,g,559,17.3,36.7,41.6,3.6,251,cn_fct6_ref,,high,1,生重
+F082,茄子,INGREDIENT,RAW,家常菜,,g,23,1.1,0.2,4.9,1.3,5.4,cn_fct6_ref,,high,1,生重
+F083,冬瓜,INGREDIENT,RAW,汤羹,,g,12,0.4,0.2,2.6,0.7,1.8,cn_fct6_ref,,high,1,生重
+F084,洋葱,INGREDIENT,RAW,家常菜,,g,40,1.1,0.2,9.0,0.9,4.4,cn_fct6_ref,,high,1,生重
+F085,蒜苗,INGREDIENT,RAW,家常菜,,g,37,2.1,0.4,8.0,1.8,5.1,cn_fct6_ref,,high,1,生重
+F086,豆角,INGREDIENT,RAW,家常菜,,g,30,2.5,0.2,5.7,2.1,4.6,cn_fct6_ref,,high,1,生重
+F087,蘑菇(鲜),INGREDIENT,RAW,汤羹,,g,20,2.7,0.1,4.1,2.1,8.3,cn_fct6_ref,,high,1,生重
+F088,木耳(水发),INGREDIENT,RAW,家常菜,,g,27,1.5,0.2,6.0,2.6,8.5,cn_fct6_ref,,high,1,水发后
+F089,海带(水发),INGREDIENT,RAW,汤羹,,g,13,1.2,0.1,2.1,0.5,8.6,cn_fct6_ref,,high,1,水发后
+F090,莲藕,INGREDIENT,RAW,家常菜,,g,73,1.9,0.2,16.4,1.2,44,cn_fct6_ref,,high,1,生重
+F091,南瓜,INGREDIENT,RAW,家常菜,,g,23,0.7,0.1,5.3,0.8,0.8,cn_fct6_ref,,high,1,生重
+F092,芹菜,INGREDIENT,RAW,家常菜,,g,22,1.2,0.2,4.5,1.2,159,cn_fct6_ref,,high,1,生重
+F093,韭菜,INGREDIENT,RAW,家常菜,,g,26,2.4,0.4,4.6,1.4,8.1,cn_fct6_ref,,high,1,生重
+F094,苦瓜,INGREDIENT,RAW,家常菜,,g,22,1.0,0.1,4.9,1.4,2.5,cn_fct6_ref,,high,1,生重
+F095,橄榄油,INGREDIENT,RAW,调味,,g,899,0,99.9,0,0,0,cn_fct6_ref,,high,1,
+F096,香油,INGREDIENT,RAW,调味,,g,898,0,99.7,0.2,0,1.1,cn_fct6_ref,,high,1,芝麻油
+F097,玉米淀粉,INGREDIENT,RAW,调味,,g,345,1.2,0.1,85.0,0.1,6.3,cn_fct6_ref,,high,1,
+F098,醋,INGREDIENT,RAW,调味,,ml,31,2.1,0.3,4.9,0,262,cn_fct6_ref,,high,1,
+F099,蚝油,INGREDIENT,RAW,调味,,ml,114,5.4,0.1,25.6,0,4200,cn_fct6_ref,,high,1,钠含量高
+F100,辣椒油,INGREDIENT,RAW,调味,,g,870,0,96.0,3.0,0,100,cn_fct6_ref,,high,1,
+F106,馒头,DISH,COOKED,主食,,g,261.43,8,1.07,52.57,1.5,2.21,derived,,high,1,由配方R06计算
+F107,面条(煮熟),DISH,COOKED,主食,,g,139.2,4.56,0.36,30.24,0.36,74,derived,,high,1,由配方R07计算
+F108,青椒土豆丝,DISH,COOKED,家常菜,,g,98.72,1.88,3.54,15.46,0.87,2.94,derived,,medium,0,由配方R08计算
+F109,红烧茄子,DISH,COOKED,家常菜,,g,91.94,1.56,6.23,8.2,1.56,246.48,derived,,medium,0,由配方R09计算
+F110,麻婆豆腐,DISH,COOKED,家常菜,,g,157.07,14.8,9.48,3.56,0.47,200.88,derived,,medium,0,由配方R10计算
+F111,鱼香肉丝,DISH,COOKED,家常菜,,g,170.45,13.36,10.01,6.89,0.55,303.65,derived,,medium,0,由配方R11计算
+F112,宫保鸡丁,DISH,COOKED,家常菜,,g,250.47,20.37,15.34,7.96,0.72,316.12,derived,,medium,0,由配方R12计算
+F113,西红柿鸡蛋汤,DISH,COOKED,汤羹,,g,27.79,1.69,1.56,1.88,0.2,171.1,derived,,medium,0,由配方R13计算
+F114,清炒菠菜,DISH,COOKED,家常菜,,g,70.96,3.25,4.37,5.62,2.12,301.25,derived,,medium,0,由配方R14计算
+F115,蒜蓉西兰花,DISH,COOKED,家常菜,,g,66.64,4.56,3.63,4.78,1.78,165.56,derived,,medium,0,由配方R15计算
+F116,土豆炖牛肉,DISH,COOKED,家常菜,,g,122.16,10.91,3.7,11.56,0.44,214.03,derived,,medium,0,由配方R16计算
+F117,蛋炒饭,DISH,COOKED,主食,,g,153.1,4.39,4.12,24.78,0.22,143.53,derived,,medium,0,由配方R17计算
+F118,番茄鸡蛋面,DISH,COOKED,主食,,g,78.97,3.11,2.08,12.34,0.27,40.18,derived,,medium,0,由配方R18计算
+F119,白灼虾,DISH,COOKED,家常菜,,g,103.33,20.67,0.89,3.11,0,616.67,derived,,medium,0,由配方R19计算
+F205,农夫山泉 饮用天然水,PACKAGED,AS_SOLD,饮品,农夫山泉,ml,0,0,0,0,0,0,brand_official,,high,1,按包装标签
+F206,康师傅 红烧牛肉面(桶装),PACKAGED,AS_SOLD,快餐连锁,康师傅,g,452,8.5,19.0,60.0,,2400,brand_official,,low,0,待按官网/包装复核
+F207,卫龙 辣条,PACKAGED,AS_SOLD,坚果零食,卫龙,g,520,9.0,33.0,48.0,,2200,brand_official,,low,0,待按包装复核
+F208,蒙牛 特仑苏 纯牛奶,PACKAGED,AS_SOLD,饮品,蒙牛,ml,67,3.6,4.4,4.7,,60,brand_official,,low,0,待按包装复核
+F209,元气森林 白桃气泡水,PACKAGED,AS_SOLD,饮品,元气森林,ml,0,0,0,0,0,15,brand_official,,low,0,0糖0卡;待复核
+F210,红牛 维生素功能饮料,PACKAGED,AS_SOLD,饮品,红牛,ml,45,0.2,0,11.0,,40,brand_official,,low,0,待按包装复核
+F211,康师傅 冰红茶,PACKAGED,AS_SOLD,饮品,康师傅,ml,39,0,0,9.7,,20,brand_official,,low,0,待按包装复核
+F212,伊利 安慕希 原味酸奶,PACKAGED,AS_SOLD,饮品,伊利,ml,95,3.1,3.3,13.3,,55,brand_official,,low,0,待按包装复核
+F213,奥利奥 原味饼干,PACKAGED,AS_SOLD,坚果零食,奥利奥,g,480,5.0,20.0,70.0,,340,brand_official,,low,0,待按包装复核
+F214,乐事 原味薯片,PACKAGED,AS_SOLD,坚果零食,乐事,g,536,6.6,34.0,50.0,,520,brand_official,,low,0,待按包装复核
+F215,三只松鼠 每日坚果,PACKAGED,AS_SOLD,坚果零食,三只松鼠,g,600,18.0,52.0,20.0,7.0,120,brand_official,,low,0,待按包装复核
+F216,好丽友 派,PACKAGED,AS_SOLD,坚果零食,好丽友,g,460,5.0,22.0,60.0,,210,brand_official,,low,0,待按包装复核
+F217,麦当劳 麦辣鸡腿堡,PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,240,13.0,11.0,25.0,,560,brand_official,,low,0,待按官网复核
+F218,麦当劳 中薯条,PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,312,3.4,15.0,41.0,,210,brand_official,,low,0,待按官网复核
+F219,肯德基 吮指原味鸡,PACKAGED,AS_SOLD,快餐连锁,肯德基,g,279,22.0,19.0,6.0,,600,brand_official,,low,0,待按官网复核
+F220,星巴克 拿铁(中杯),PACKAGED,AS_SOLD,饮品,星巴克,ml,62,3.0,3.4,4.7,,40,brand_official,,low,0,待按官网复核
+F221,瑞幸 生椰拿铁,PACKAGED,AS_SOLD,饮品,瑞幸,ml,78,1.6,4.0,8.4,,35,brand_official,,low,0,待按官网复核
+F222,统一 老坛酸菜牛肉面(桶装),PACKAGED,AS_SOLD,快餐连锁,统一,g,455,8.2,19.5,60.5,,2300,brand_official,,low,0,待按包装复核
+F223,洽洽 香瓜子,PACKAGED,AS_SOLD,坚果零食,洽洽,g,615,22.7,53.4,17.4,,600,brand_official,,low,0,待按包装复核
+F224,蒙牛 纯甄 常温酸奶,PACKAGED,AS_SOLD,饮品,蒙牛,ml,84,3.0,3.0,11.5,,60,brand_official,,low,0,待按包装复核
