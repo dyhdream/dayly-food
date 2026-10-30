@@ -247,3 +247,161 @@ F132,番茄牛腩,DISH,COOKED,家常菜,,g,247.54,11.93,21.4,1.96,0.22,175.56,de
 F133,醋溜白菜,DISH,COOKED,家常菜,,g,48.93,1.97,2.64,5.17,1,83.53,derived,,high,1,由配方R33计算
 F134,蒸蛋,DISH,COOKED,蛋类,,g,72,6.65,4.4,1.4,0,260.5,derived,,high,1,由配方R34计算
 F135,炒青菜,DISH,COOKED,家常菜,,g,46.77,1.8,3.56,3.24,1.32,244.8,derived,,high,1,由配方R35计算
+F400,黑米,INGREDIENT,RAW,主食,,g,341,9.4,1.9,72.2,3.9,7.1,cn_fct6_ref,,high,1,生重
+F401,荞麦,INGREDIENT,RAW,主食,,g,337,9.3,2.3,73.0,6.5,4.7,cn_fct6_ref,,high,1,生重
+F402,薏米,INGREDIENT,RAW,主食,,g,361,12.8,3.3,71.1,2.0,3.6,cn_fct6_ref,,high,1,生重
+F403,藜麦,INGREDIENT,RAW,主食,,g,368,14.1,6.1,64.2,7.0,5.0,cn_fct6_ref,,high,1,生重
+F404,玉米面,INGREDIENT,RAW,主食,,g,341,8.1,3.3,69.6,5.6,2.0,cn_fct6_ref,,high,1,
+F405,小米面,INGREDIENT,RAW,主食,,g,350,8.0,2.0,74.0,1.6,4.0,cn_fct6_ref,,high,1,
+F406,粉丝(干),INGREDIENT,RAW,主食,,g,338,0.8,0.2,83.7,1.1,9.3,cn_fct6_ref,,high,1,干重
+F407,红薯粉条,INGREDIENT,RAW,主食,,g,337,0.5,0.1,83.4,0.6,5.0,cn_fct6_ref,,high,1,干重
+F408,魔芋,INGREDIENT,RAW,家常菜,,g,20,0.1,0,4.0,3.0,2.0,cn_fct6_ref,,high,1,水发
+F409,藕粉,INGREDIENT,RAW,主食,,g,372,0.2,0,91.0,0,0,cn_fct6_ref,,high,1,干重
+F412,鸡胗,INGREDIENT,RAW,家常菜,,g,118,19.2,2.8,4.0,0,74,cn_fct6_ref,,high,1,生重
+F414,猪五花,INGREDIENT,RAW,家常菜,,g,568,9.3,59.0,0,0,36,cn_fct6_ref,,high,1,生重
+F415,猪肉馅(瘦),INGREDIENT,RAW,家常菜,,g,190,18.0,12.0,1.0,0,57,cn_fct6_ref,,high,1,生重
+F416,羊肉片,INGREDIENT,RAW,家常菜,,g,203,19.0,13.6,0,0,80,cn_fct6_ref,,high,1,生重
+F417,火鸡胸,INGREDIENT,RAW,家常菜,,g,111,24.0,1.0,0,0,60,usda_ref,,medium,1,生重
+F418,牛腱,INGREDIENT,RAW,家常菜,,g,106,20.3,2.5,0.6,0,68,cn_fct6_ref,,high,1,生重
+F419,奶酪片,INGREDIENT,RAW,饮品,,g,260,20.0,18.0,5.0,0,700,public_dataset,,medium,1,
+F420,巴沙鱼,INGREDIENT,RAW,家常菜,,g,90,15.0,3.0,0,0,80,public_dataset,,medium,1,生重
+F421,鳕鱼,INGREDIENT,RAW,家常菜,,g,88,20.4,0.5,0,0,130,cn_fct6_ref,,high,1,生重
+F422,金枪鱼(罐头),INGREDIENT,RAW,家常菜,,g,99,22.0,1.0,0.5,0,340,public_dataset,,medium,1,水浸
+F423,扇贝,INGREDIENT,RAW,家常菜,,g,60,11.1,0.6,2.6,0,339,cn_fct6_ref,,high,1,可食部
+F424,螃蟹,INGREDIENT,RAW,家常菜,,g,103,17.5,2.6,2.3,0,193,cn_fct6_ref,,high,1,可食部
+F425,小龙虾,INGREDIENT,RAW,家常菜,,g,93,18.9,0.9,1.0,0,190,public_dataset,,medium,1,可食部
+F426,南豆腐,INGREDIENT,RAW,家常菜,,g,88,6.2,5.0,3.3,0.2,7,cn_fct6_ref,,high,1,
+F427,素鸡,INGREDIENT,RAW,家常菜,,g,192,16.5,12.5,3.0,0.9,374,cn_fct6_ref,,high,1,
+F428,黄豆芽,INGREDIENT,RAW,家常菜,,g,44,4.5,1.6,4.5,1.5,7.2,cn_fct6_ref,,high,1,生重
+F429,绿豆芽,INGREDIENT,RAW,家常菜,,g,18,2.1,0.1,2.9,0.8,4.4,cn_fct6_ref,,high,1,生重
+F430,豌豆苗,INGREDIENT,RAW,家常菜,,g,34,4.6,0.8,3.0,1.9,18,cn_fct6_ref,,high,1,生重
+F431,芥蓝,INGREDIENT,RAW,家常菜,,g,24,2.8,0.4,3.0,1.6,50,cn_fct6_ref,,high,1,生重
+F432,油菜,INGREDIENT,RAW,家常菜,,g,23,1.8,0.5,3.8,1.1,56,cn_fct6_ref,,high,1,生重
+F433,蒜苔,INGREDIENT,RAW,家常菜,,g,60,2.0,0.1,14.8,2.5,3.1,cn_fct6_ref,,high,1,生重
+F434,尖椒,INGREDIENT,RAW,家常菜,,g,22,1.5,0.3,5.0,2.1,2.2,cn_fct6_ref,,high,1,生重
+F435,香菜,INGREDIENT,RAW,调味,,g,33,1.8,0.4,6.9,1.2,48,cn_fct6_ref,,high,1,生重
+F436,姜,INGREDIENT,RAW,调味,,g,46,1.3,0.6,10.3,2.7,14.9,cn_fct6_ref,,high,1,生重
+F437,大蒜,INGREDIENT,RAW,调味,,g,126,4.5,0.2,27.6,1.1,19.6,cn_fct6_ref,,high,1,生重
+F438,小葱,INGREDIENT,RAW,调味,,g,27,1.7,0.3,6.5,1.3,10.4,cn_fct6_ref,,high,1,生重
+F439,香菇(鲜),INGREDIENT,RAW,家常菜,,g,26,2.2,0.3,5.2,3.3,1.4,cn_fct6_ref,,high,1,生重
+F440,金针菇,INGREDIENT,RAW,家常菜,,g,32,2.4,0.4,6.0,2.7,4.3,cn_fct6_ref,,high,1,生重
+F441,平菇,INGREDIENT,RAW,家常菜,,g,24,1.9,0.3,4.6,2.3,3.8,cn_fct6_ref,,high,1,生重
+F442,杏鲍菇,INGREDIENT,RAW,家常菜,,g,31,1.3,0.4,6.0,2.1,3.0,cn_fct6_ref,,high,1,生重
+F443,番茄(罐头),INGREDIENT,RAW,调味,,g,30,1.2,0.2,6.0,1.2,180,public_dataset,,medium,1,
+F444,芒果干,INGREDIENT,RAW,坚果零食,,g,319,2.5,1.3,79.0,2.4,120,public_dataset,,medium,1,
+F445,葡萄干,INGREDIENT,RAW,坚果零食,,g,341,2.5,0.4,83.4,1.6,19,cn_fct6_ref,,high,1,
+F446,红枣(干),INGREDIENT,RAW,坚果零食,,g,276,3.2,0.5,67.8,6.2,6.2,cn_fct6_ref,,high,1,
+F447,柠檬,INGREDIENT,RAW,水果,,g,37,1.1,1.2,6.2,1.3,1.1,cn_fct6_ref,,high,1,可食部
+F448,牛油果,INGREDIENT,RAW,水果,,g,171,2.0,15.3,7.4,2.1,7,usda_ref,,medium,1,可食部
+F449,无花果,INGREDIENT,RAW,水果,,g,65,1.5,0.1,16.0,3.0,5,cn_fct6_ref,,high,1,可食部
+F450,山楂,INGREDIENT,RAW,水果,,g,102,0.5,0.6,25.1,3.1,5.4,cn_fct6_ref,,high,1,可食部
+F451,枇杷,INGREDIENT,RAW,水果,,g,41,0.8,0.2,9.3,0.8,4,cn_fct6_ref,,high,1,可食部
+F452,桑葚,INGREDIENT,RAW,水果,,g,57,1.7,0.4,13.8,4.1,2.0,cn_fct6_ref,,high,1,可食部
+F453,核桃油,INGREDIENT,RAW,调味,,g,884,0,100.0,0,0,0,public_dataset,,medium,1,
+F454,花生油,INGREDIENT,RAW,调味,,g,899,0,99.9,0,0,0,cn_fct6_ref,,high,1,
+F455,玉米油,INGREDIENT,RAW,调味,,g,895,0,99.6,0,0,0,cn_fct6_ref,,high,1,
+F456,椰子油,INGREDIENT,RAW,调味,,g,892,0,99.0,0,0,0,public_dataset,,medium,1,
+F457,老抽,INGREDIENT,RAW,调味,,ml,74,4.6,0.1,11.0,0,5500,public_dataset,,medium,1,钠高
+F458,鸡精,INGREDIENT,RAW,调味,,g,200,12.0,1.5,35.0,0,18800,public_dataset,,medium,1,钠极高
+F459,五香粉,INGREDIENT,RAW,调味,,g,348,12.0,10.0,55.0,10.0,120,public_dataset,,low,0,待核实
+F460,辣椒酱,INGREDIENT,RAW,调味,,g,116,2.0,3.0,19.0,2.5,4200,public_dataset,,medium,1,钠高
+F500,华莱士 香辣鸡腿堡,PACKAGED,AS_SOLD,快餐连锁,华莱士,g,245,13.0,11.0,24.0,,560,estimate,,low,0,市售典型值;待核实
+F501,华莱士 全鸡,PACKAGED,AS_SOLD,快餐连锁,华莱士,g,300,24.0,21.0,3.0,,700,estimate,,low,0,市售典型值;待核实
+F502,塔斯汀 中国汉堡,PACKAGED,AS_SOLD,快餐连锁,塔斯汀,g,260,14.0,12.0,25.0,,600,estimate,,low,0,市售典型值;待核实
+F503,蜜雪冰城 冰鲜柠檬水,PACKAGED,AS_SOLD,饮品,蜜雪冰城,ml,35,0.1,0,8.7,,10,estimate,,low,0,市售典型值;待核实
+F504,蜜雪冰城 圣代,PACKAGED,AS_SOLD,饮品,蜜雪冰城,g,145,3.0,4.5,23.0,,60,estimate,,low,0,市售典型值;待核实
+F505,喜茶 多肉葡萄,PACKAGED,AS_SOLD,饮品,喜茶,ml,60,0.5,0.2,14.0,,15,estimate,,low,0,市售典型值;待核实
+F506,奈雪的茶 霸气橙子,PACKAGED,AS_SOLD,饮品,奈雪,ml,45,0.6,0.2,10.5,,10,estimate,,low,0,市售典型值;待核实
+F507,康师傅 红烧牛肉面(袋装),PACKAGED,AS_SOLD,快餐连锁,康师傅,g,445,8.0,18.5,60.0,,2300,estimate,,low,0,市售典型值;待核实
+F508,统一 冰红茶,PACKAGED,AS_SOLD,饮品,统一,ml,38,0,0,9.4,,20,estimate,,low,0,市售典型值;待核实
+F509,东方树叶 乌龙茶,PACKAGED,AS_SOLD,饮品,农夫山泉,ml,0,0,0,0,0,5,estimate,,low,0,0糖0卡
+F510,脉动 维生素饮料,PACKAGED,AS_SOLD,饮品,脉动,ml,25,0,0,6.2,,10,estimate,,low,0,市售典型值;待核实
+F511,养乐多 活性乳酸菌饮品,PACKAGED,AS_SOLD,饮品,养乐多,ml,68,1.1,0.1,15.5,,25,estimate,,low,0,市售典型值;待核实
+F512,蒙牛 冠益乳,PACKAGED,AS_SOLD,饮品,蒙牛,ml,90,2.9,3.2,12.8,,60,estimate,,low,0,市售典型值;待核实
+F513,士力架 花生夹心巧克力,PACKAGED,AS_SOLD,坚果零食,士力架,g,480,8.5,22.0,62.0,,200,estimate,,low,0,市售典型值;待核实
+F514,德芙 牛奶巧克力,PACKAGED,AS_SOLD,坚果零食,德芙,g,540,7.5,31.0,57.0,,80,estimate,,low,0,市售典型值;待核实
+F515,乐事 黄瓜味薯片,PACKAGED,AS_SOLD,坚果零食,乐事,g,536,6.5,34.0,50.0,,500,estimate,,low,0,市售典型值;待核实
+F516,卫龙 魔芋爽,PACKAGED,AS_SOLD,坚果零食,卫龙,g,90,1.0,3.0,14.0,,1200,estimate,,low,0,市售典型值;待核实
+F517,三只松鼠 巴旦木,PACKAGED,AS_SOLD,坚果零食,三只松鼠,g,590,21.0,50.0,20.0,,200,estimate,,low,0,市售典型值;待核实
+F518,良品铺子 猪肉脯,PACKAGED,AS_SOLD,坚果零食,良品铺子,g,400,28.0,15.0,38.0,,900,estimate,,low,0,市售典型值;待核实
+F519,周黑鸭 鸭脖,PACKAGED,AS_SOLD,坚果零食,周黑鸭,g,200,24.0,9.5,6.0,,1500,estimate,,low,0,市售典型值;待核实
+F520,洽洽 每日坚果,PACKAGED,AS_SOLD,坚果零食,洽洽,g,600,17.0,52.0,21.0,,150,estimate,,low,0,市售典型值;待核实
+F521,旺旺 雪饼,PACKAGED,AS_SOLD,坚果零食,旺旺,g,490,5.0,20.0,70.0,,400,estimate,,low,0,市售典型值;待核实
+F522,达利园 蛋黄派,PACKAGED,AS_SOLD,坚果零食,达利园,g,420,5.5,18.0,58.0,,300,estimate,,low,0,市售典型值;待核实
+F523,康师傅 3+2饼干,PACKAGED,AS_SOLD,坚果零食,康师傅,g,500,7.0,23.0,65.0,,450,estimate,,low,0,市售典型值;待核实
+F524,伊利 纯牛奶,PACKAGED,AS_SOLD,饮品,伊利,ml,65,3.2,3.6,4.9,,55,estimate,,low,0,市售典型值;待核实
+F525,光明 莫斯利安酸奶,PACKAGED,AS_SOLD,饮品,光明,ml,95,2.9,3.1,14.5,,60,estimate,,low,0,市售典型值;待核实
+F526,东方树叶 茉莉花茶,PACKAGED,AS_SOLD,饮品,农夫山泉,ml,0,0,0,0,0,5,estimate,,low,0,0糖0卡
+F527,王老吉 凉茶,PACKAGED,AS_SOLD,饮品,王老吉,ml,40,0,0,10.0,,15,estimate,,low,0,市售典型值;待核实
+F528,加多宝 凉茶,PACKAGED,AS_SOLD,饮品,加多宝,ml,40,0,0,10.0,,15,estimate,,low,0,市售典型值;待核实
+F529,雪花 啤酒,PACKAGED,AS_SOLD,饮品,雪花,ml,32,0.3,0,3.0,,10,estimate,,low,0,酒精热量未计入三大营养素
+F530,青岛 啤酒,PACKAGED,AS_SOLD,饮品,青岛,ml,33,0.3,0,3.2,,10,estimate,,low,0,酒精热量未计入三大营养素
+F531,麦当劳 麦香鱼,PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,260,12.0,10.0,29.0,,500,estimate,,low,0,市售典型值;待核实
+F532,麦当劳 麦乐鸡(5块),PACKAGED,AS_SOLD,快餐连锁,麦当劳,g,260,15.0,16.0,12.0,,480,estimate,,low,0,市售典型值;待核实
+F534,肯德基 薯条(中),PACKAGED,AS_SOLD,快餐连锁,肯德基,g,315,3.5,15.0,41.0,,220,estimate,,low,0,市售典型值;待核实
+F535,海底捞 牛油火锅底料,PACKAGED,AS_SOLD,调味,海底捞,g,700,6.0,74.0,10.0,,3000,estimate,,low,0,市售典型值;待核实
+F536,老干妈 风味豆豉,PACKAGED,AS_SOLD,调味,老干妈,g,520,12.0,50.0,10.0,,2500,estimate,,low,0,市售典型值;待核实
+F537,海天 黄豆酱,PACKAGED,AS_SOLD,调味,海天,g,190,9.0,6.0,25.0,,4500,estimate,,low,0,市售典型值;待核实
+F538,李锦记 蚝油,PACKAGED,AS_SOLD,调味,李锦记,ml,110,4.5,0.1,24.0,,4000,estimate,,low,0,市售典型值;待核实
+F539,金龙鱼 调和油,PACKAGED,AS_SOLD,调味,金龙鱼,g,899,0,99.9,0,0,0,estimate,,low,0,市售典型值;待核实
+F540,东北大米,PACKAGED,AS_SOLD,主食,,g,350,7.4,0.8,77.9,,3,estimate,,low,0,生米;待核实
+F541,沃隆 每日坚果,PACKAGED,AS_SOLD,坚果零食,沃隆,g,610,18.0,53.0,21.0,,150,estimate,,low,0,市售典型值;待核实
+F542,卫龙 亲嘴烧,PACKAGED,AS_SOLD,坚果零食,卫龙,g,480,12.0,25.0,50.0,,1800,estimate,,low,0,市售典型值;待核实
+F543,奥利奥 夹心卷,PACKAGED,AS_SOLD,坚果零食,奥利奥,g,470,4.5,19.0,70.0,,250,estimate,,low,0,市售典型值;待核实
+F544,徐福记 沙琪玛,PACKAGED,AS_SOLD,坚果零食,徐福记,g,460,6.0,18.0,68.0,,200,estimate,,low,0,市售典型值;待核实
+F545,桃李 面包,PACKAGED,AS_SOLD,早餐,桃李,g,320,8.0,8.0,53.0,,350,estimate,,low,0,市售典型值;待核实
+F546,蒙牛 大果粒酸奶,PACKAGED,AS_SOLD,饮品,蒙牛,ml,105,2.7,3.0,17.0,,65,estimate,,low,0,市售典型值;待核实
+F547,农夫山泉 维他命水,PACKAGED,AS_SOLD,饮品,农夫山泉,ml,28,0,0,7.0,,5,estimate,,low,0,市售典型值;待核实
+F548,元气森林 燃茶,PACKAGED,AS_SOLD,饮品,元气森林,ml,0,0,0,0,0,10,estimate,,low,0,0糖0卡
+F549,三得利 乌龙茶,PACKAGED,AS_SOLD,饮品,三得利,ml,0,0,0,0,0,5,estimate,,low,0,无糖
+F550,康师傅 绿茶,PACKAGED,AS_SOLD,饮品,康师傅,ml,38,0,0,9.4,,20,estimate,,low,0,市售典型值;待核实
+F551,良品铺子 素毛肚,PACKAGED,AS_SOLD,坚果零食,良品铺子,g,130,2.0,6.0,16.0,,1300,estimate,,low,0,市售典型值;待核实
+F552,卫龙 大面筋,PACKAGED,AS_SOLD,坚果零食,卫龙,g,460,9.0,22.0,56.0,,2100,estimate,,low,0,市售典型值;待核实
+F553,好丽友 好有趣,PACKAGED,AS_SOLD,坚果零食,好丽友,g,480,6.0,24.0,60.0,,300,estimate,,low,0,市售典型值;待核实
+F554,百事可乐,PACKAGED,AS_SOLD,饮品,百事,ml,43,0,0,11.0,,15,estimate,,low,0,市售典型值;待核实
+F555,雪碧,PACKAGED,AS_SOLD,饮品,雪碧,ml,40,0,0,10.4,,15,estimate,,low,0,市售典型值;待核实
+F600,白切鸡,PACKAGED,AS_SOLD,家常菜,,g,200,22.0,12.0,1.0,,450,estimate,,low,0,市售典型值;待核实
+F601,酱牛肉,PACKAGED,AS_SOLD,家常菜,,g,246,31.0,12.0,3.0,,900,estimate,,low,0,市售典型值;待核实
+F602,盐水鸭,PACKAGED,AS_SOLD,家常菜,,g,250,20.0,17.0,2.0,,1000,estimate,,low,0,市售典型值;待核实
+F603,卤鸡腿,PACKAGED,AS_SOLD,家常菜,,g,180,20.0,10.0,2.0,,700,estimate,,low,0,市售典型值;待核实
+F604,红烧带鱼,PACKAGED,AS_SOLD,家常菜,,g,180,14.0,12.0,4.0,,600,estimate,,low,0,市售典型值;待核实
+F605,干锅花菜,PACKAGED,AS_SOLD,家常菜,,g,110,3.0,8.0,6.0,,550,estimate,,low,0,市售典型值;待核实
+F606,地三鲜,PACKAGED,AS_SOLD,家常菜,,g,130,2.0,9.0,10.0,,600,estimate,,low,0,市售典型值;待核实
+F607,鱼香茄子,PACKAGED,AS_SOLD,家常菜,,g,120,2.0,8.0,8.0,,650,estimate,,low,0,市售典型值;待核实
+F608,酸菜鱼,PACKAGED,AS_SOLD,家常菜,,g,120,12.0,7.0,2.0,,800,estimate,,low,0,市售典型值;待核实
+F609,水煮牛肉,PACKAGED,AS_SOLD,家常菜,,g,180,14.0,12.0,3.0,,850,estimate,,low,0,市售典型值;待核实
+F610,麻辣香锅,PACKAGED,AS_SOLD,家常菜,,g,200,8.0,16.0,8.0,,900,estimate,,low,0,市售典型值;待核实
+F611,小炒黄牛肉,PACKAGED,AS_SOLD,家常菜,,g,190,16.0,13.0,3.0,,750,estimate,,low,0,市售典型值;待核实
+F612,手撕包菜,PACKAGED,AS_SOLD,家常菜,,g,90,2.0,7.0,6.0,,600,estimate,,low,0,市售典型值;待核实
+F613,蒜香排骨,PACKAGED,AS_SOLD,家常菜,,g,300,18.0,22.0,6.0,,700,estimate,,low,0,市售典型值;待核实
+F614,西红柿炖牛腩,PACKAGED,AS_SOLD,家常菜,,g,130,9.0,8.0,4.0,,650,estimate,,low,0,市售典型值;待核实
+F615,烤鱼,PACKAGED,AS_SOLD,家常菜,,g,160,18.0,9.0,2.0,,800,estimate,,low,0,市售典型值;待核实
+F616,黄焖鸡,PACKAGED,AS_SOLD,家常菜,,g,150,14.0,9.0,3.0,,700,estimate,,low,0,市售典型值;待核实
+F617,卤肉饭,PACKAGED,AS_SOLD,快餐连锁,,g,175,8.0,6.0,23.0,,600,estimate,,low,0,市售典型值;待核实
+F618,牛肉面,PACKAGED,AS_SOLD,快餐连锁,,g,110,6.0,3.0,15.0,,700,estimate,,low,0,市售典型值;待核实
+F619,兰州拉面,PACKAGED,AS_SOLD,快餐连锁,,g,100,5.0,2.0,16.0,,650,estimate,,low,0,市售典型值;待核实
+F620,全麦面包,PACKAGED,AS_SOLD,早餐,,g,265,9.0,4.0,49.0,,400,estimate,,low,0,市售典型值;待核实
+F621,贝果,PACKAGED,AS_SOLD,早餐,,g,250,10.0,2.0,50.0,,450,estimate,,low,0,市售典型值;待核实
+F622,汉堡胚,PACKAGED,AS_SOLD,早餐,,g,280,8.0,5.0,51.0,,480,estimate,,low,0,市售典型值;待核实
+F623,玉米片,PACKAGED,AS_SOLD,早餐,,g,380,7.0,3.0,80.0,,700,estimate,,low,0,市售典型值;待核实
+F624,即食燕麦片,PACKAGED,AS_SOLD,早餐,,g,380,10.0,7.0,65.0,,10,estimate,,low,0,市售典型值;待核实
+F625,蛋白棒,PACKAGED,AS_SOLD,坚果零食,,g,380,30.0,12.0,40.0,,250,estimate,,low,0,市售典型值;待核实
+F626,蛋白粉,PACKAGED,AS_SOLD,饮品,,g,380,75.0,5.0,8.0,,300,estimate,,low,0,市售典型值;待核实
+F627,无糖酸奶,PACKAGED,AS_SOLD,饮品,,ml,60,3.5,3.2,4.5,,50,estimate,,low,0,市售典型值;待核实
+F628,燕麦奶,PACKAGED,AS_SOLD,饮品,,ml,45,1.0,1.5,6.5,,60,estimate,,low,0,市售典型值;待核实
+F629,杏仁奶,PACKAGED,AS_SOLD,饮品,,ml,30,0.6,2.5,1.5,,70,estimate,,low,0,市售典型值;待核实
+F630,肉松面包,PACKAGED,AS_SOLD,早餐,,g,350,9.0,14.0,48.0,,450,estimate,,low,0,市售典型值;待核实
+F631,三明治,PACKAGED,AS_SOLD,早餐,,g,250,10.0,10.0,28.0,,600,estimate,,low,0,市售典型值;待核实
+F632,饭团,PACKAGED,AS_SOLD,早餐,,g,180,5.0,3.0,33.0,,500,estimate,,low,0,市售典型值;待核实
+F633,豆花,PACKAGED,AS_SOLD,早餐,,g,60,3.0,2.0,7.0,,30,estimate,,low,0,市售典型值;待核实
+F634,茶叶蛋,PACKAGED,AS_SOLD,早餐,,g,155,13.0,10.0,3.0,,800,estimate,,low,0,市售典型值;待核实
+F635,甜瓜,PACKAGED,AS_SOLD,水果,,g,26,0.4,0.1,6.0,,20,estimate,,low,0,可食部;待核实
+F636,果冻,PACKAGED,AS_SOLD,坚果零食,,g,70,0.1,0.1,17.0,,30,estimate,,low,0,市售典型值;待核实
+F637,蒟蒻果冻,PACKAGED,AS_SOLD,坚果零食,,g,20,0,0,5.0,,20,estimate,,low,0,市售典型值;待核实
+F638,棉花糖,PACKAGED,AS_SOLD,坚果零食,,g,320,1.8,0,78.0,,80,estimate,,low,0,市售典型值;待核实
+F639,烧麦,PACKAGED,AS_SOLD,早餐,,g,230,8.0,8.0,31.0,,550,estimate,,low,0,市售典型值;待核实
+F640,汤圆,PACKAGED,AS_SOLD,早餐,,g,300,5.0,8.0,53.0,,50,estimate,,low,0,市售典型值;待核实
+F641,粽子,PACKAGED,AS_SOLD,早餐,,g,200,4.0,4.0,38.0,,300,estimate,,low,0,市售典型值;待核实
+F642,春卷,PACKAGED,AS_SOLD,早餐,,g,250,6.0,10.0,34.0,,450,estimate,,low,0,市售典型值;待核实
+F643,葱油饼,PACKAGED,AS_SOLD,早餐,,g,330,6.5,14.0,45.0,,600,estimate,,low,0,市售典型值;待核实
+F644,韭菜盒子,PACKAGED,AS_SOLD,早餐,,g,250,7.0,13.0,28.0,,550,estimate,,low,0,市售典型值;待核实

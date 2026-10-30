@@ -2,6 +2,8 @@ package com.daylyfood.app.ui
 
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -99,6 +102,33 @@ fun ProfileScreen(
     updateVm: UpdateViewModel = hiltViewModel(),
 ) {
     val updateState by updateVm.state.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    val backupVm: BackupViewModel = hiltViewModel()
+    val backupState by backupVm.state.collectAsStateWithLifecycle()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            backupVm.export { json ->
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                }.getOrNull() != null
+            }
+        }
+    }
+
+    var pendingRestore by remember { mutableStateOf<String?>(null) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            pendingRestore = runCatching {
+                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            }.getOrNull()
+        }
+    }
 
     var sex by remember { mutableStateOf(initial?.sex ?: "M") }
     var age by remember { mutableStateOf((initial?.age ?: 30).toString()) }
@@ -252,7 +282,61 @@ fun ProfileScreen(
                 }
             }
         }
+        SectionCard {
+            Text("数据备份", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "记录只存在这台手机上，卸载或换机就没了。建议偶尔导出一份存到网盘。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { exportLauncher.launch(backupVm.suggestedFileName()) }) {
+                    Text("导出备份")
+                }
+                OutlinedButton(onClick = {
+                    importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                }) { Text("恢复备份") }
+            }
+            when (val backup = backupState) {
+                BackupViewModel.State.Idle -> Unit
+                BackupViewModel.State.Working ->
+                    Text("处理中…", style = MaterialTheme.typography.bodySmall)
+
+                is BackupViewModel.State.Done -> Text(
+                    backup.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+
+                is BackupViewModel.State.Failed -> Text(
+                    backup.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+
         Spacer(Modifier.height(24.dp))
+    }
+
+    val restoreText = pendingRestore
+    if (restoreText != null) {
+        AlertDialog(
+            onDismissRequest = { pendingRestore = null },
+            title = { Text("恢复备份") },
+            text = {
+                Text("会用备份内容覆盖当前的所有记录和自建食物，确定继续？")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    backupVm.restore(restoreText)
+                    pendingRestore = null
+                }) { Text("覆盖恢复") }
+            },
+            dismissButton = { TextButton(onClick = { pendingRestore = null }) { Text("取消") } },
+        )
     }
 }
 

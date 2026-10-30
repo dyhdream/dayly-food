@@ -32,6 +32,18 @@ interface FoodDao {
     @Query("SELECT * FROM food_item WHERE id = :id")
     suspend fun byId(id: String): FoodEntity?
 
+    @Query("SELECT * FROM food_item WHERE kind = 'CUSTOM' ORDER BY name")
+    suspend fun customFoods(): List<FoodEntity>
+
+    @Query("SELECT * FROM food_serving WHERE foodId IN (SELECT id FROM food_item WHERE kind = 'CUSTOM')")
+    suspend fun customServings(): List<ServingEntity>
+
+    @Query("DELETE FROM food_item WHERE kind = 'CUSTOM'")
+    suspend fun deleteCustomFoods()
+
+    @Query("DELETE FROM food_serving WHERE foodId NOT IN (SELECT id FROM food_item)")
+    suspend fun deleteOrphanServings()
+
     @Query("SELECT * FROM food_serving WHERE foodId = :foodId ORDER BY sort")
     suspend fun servings(foodId: String): List<ServingEntity>
 
@@ -75,6 +87,12 @@ interface DiaryDao {
 
     @Query("SELECT * FROM diary_entry WHERE epochDay = :day ORDER BY id")
     suspend fun list(day: Long): List<DiaryEntryEntity>
+
+    @Query("SELECT * FROM diary_entry ORDER BY epochDay, id")
+    suspend fun all(): List<DiaryEntryEntity>
+
+    @Query("DELETE FROM diary_entry")
+    suspend fun clearAll()
 
     @Insert
     suspend fun insertAll(entries: List<DiaryEntryEntity>)
