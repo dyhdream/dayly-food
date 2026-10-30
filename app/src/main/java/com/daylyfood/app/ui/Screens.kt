@@ -307,7 +307,7 @@ fun HomeScreen(
             }
         }
 
-        SectionCard {
+        SectionCard(brush = heroBrush()) {
             CalorieRing(
                 consumed = eaten.roundToInt(),
                 target = target.roundToInt(),

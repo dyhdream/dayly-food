@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -146,7 +146,7 @@ fun DishesScreen(
         }
 
         items(shown, key = { it.id }) { food ->
-            DishRow(food) { pending = food }
+            DishRow(food, onClick = { pending = food }, modifier = Modifier.animateItem())
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
         }
 
@@ -166,9 +166,9 @@ fun DishesScreen(
 }
 
 @Composable
-private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
+private fun DishRow(dish: FoodEntity, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
+        modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {

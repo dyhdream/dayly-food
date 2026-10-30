@@ -1,4 +1,4 @@
-package com.daylyfood.app
+﻿package com.daylyfood.app
 
 import android.net.Uri
 import android.os.Bundle
@@ -21,6 +21,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
@@ -45,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -227,10 +234,19 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                         Icon(painterResource(R.drawable.ic_gallery), contentDescription = "从相册选")
                     }
                     Spacer(Modifier.height(10.dp))
+                    val cameraPress = remember { MutableInteractionSource() }
+                    val cameraHeld by cameraPress.collectIsPressedAsState()
+                    val cameraScale by animateFloatAsState(
+                        targetValue = if (cameraHeld) 0.9f else 1f,
+                        animationSpec = spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMedium),
+                        label = "cameraPress",
+                    )
                     FloatingActionButton(
                         onClick = { launchCamera() },
+                        interactionSource = cameraPress,
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.graphicsLayer { scaleX = cameraScale; scaleY = cameraScale },
                     ) {
                         Icon(painterResource(R.drawable.ic_camera), contentDescription = "拍照")
                     }
@@ -241,19 +257,19 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                     NavigationBarItem(
                         selected = tab == 0,
                         onClick = { tab = 0 },
-                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                        icon = { TabIcon(Icons.Default.Home, tab == 0) },
                         label = { Text("记录") },
                     )
                     NavigationBarItem(
                         selected = tab == 1,
                         onClick = { tab = 1 },
-                        icon = { Icon(Icons.Default.List, contentDescription = null) },
+                        icon = { TabIcon(painterResource(R.drawable.ic_bowl), tab == 1) },
                         label = { Text("查找") },
                     )
                     NavigationBarItem(
                         selected = tab == 2,
                         onClick = { tab = 2 },
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                        icon = { TabIcon(Icons.Default.Person, tab == 2) },
                         label = { Text("我的") },
                     )
                 }
@@ -302,4 +318,33 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             }
         }
     }
+}
+
+/** Tab icons pop a little when selected; the only motion the bottom bar needs. */
+@Composable
+private fun TabIcon(icon: ImageVector, selected: Boolean) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.18f else 1f,
+        animationSpec = spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMedium),
+        label = "tabIcon",
+    )
+    Icon(
+        icon,
+        contentDescription = null,
+        modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+    )
+}
+
+@Composable
+private fun TabIcon(painter: androidx.compose.ui.graphics.painter.Painter, selected: Boolean) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.18f else 1f,
+        animationSpec = spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMedium),
+        label = "tabIconPainter",
+    )
+    Icon(
+        painter,
+        contentDescription = null,
+        modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+    )
 }

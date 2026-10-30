@@ -1,6 +1,19 @@
 package com.daylyfood.app.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -51,12 +64,30 @@ fun CalorieRing(
 ) {
     val surface = MaterialTheme.colorScheme.surfaceVariant
     val primary = MaterialTheme.colorScheme.primary
-    val primarySoft = MaterialTheme.colorScheme.primaryContainer
     val over = target in 1..consumed
     val fraction = progressOf(consumed, target)
     val accent = if (over) MaterialTheme.colorScheme.error else primary
-    val animatedFraction by animateFloatAsState(fraction, tween(650), label = "ringFraction")
-    val animatedConsumed by animateIntAsState(consumed, tween(650), label = "ringValue")
+
+    // Spring instead of tween: the ring settles with a little overshoot, which reads as "alive".
+    val animatedFraction by animateFloatAsState(
+        targetValue = fraction,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = Spring.StiffnessLow),
+        label = "ringFraction",
+    )
+    val animatedConsumed by animateIntAsState(
+        targetValue = consumed,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
+        label = "ringValue",
+    )
+
+    // Slow breathing glow so the ring is never completely static.
+    val infinite = rememberInfiniteTransition(label = "ringGlow")
+    val glow by infinite.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.45f,
+        animationSpec = infiniteRepeatable(tween(2200), RepeatMode.Reverse),
+        label = "glowAlpha",
+    )
 
     Box(modifier = modifier.size(200.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(200.dp)) {
@@ -73,8 +104,20 @@ fun CalorieRing(
                 style = Stroke(width = stroke, cap = StrokeCap.Round),
             )
             if (animatedFraction > 0f) {
+                // Soft halo under the arc.
                 drawArc(
-                    brush = Brush.sweepGradient(listOf(primarySoft, accent, accent)),
+                    color = accent.copy(alpha = glow * 0.35f),
+                    startAngle = -90f,
+                    sweepAngle = 360f * animatedFraction,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = Stroke(width = stroke * 2.1f, cap = StrokeCap.Round),
+                )
+                drawArc(
+                    brush = Brush.sweepGradient(
+                        listOf(accent.copy(alpha = 0.55f), accent, accent.copy(alpha = 0.9f)),
+                    ),
                     startAngle = -90f,
                     sweepAngle = 360f * animatedFraction,
                     useCenter = false,
@@ -87,7 +130,8 @@ fun CalorieRing(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$animatedConsumed",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.SemiBold,
                 color = accent,
             )
             Text(
@@ -117,7 +161,11 @@ fun MacroBar(
     modifier: Modifier = Modifier,
 ) {
     val fraction = progressOf(current, target)
-    val animated by animateFloatAsState(fraction, tween(500), label = "macroBar")
+    val animated by animateFloatAsState(
+        targetValue = fraction,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow),
+        label = "macroBar",
+    )
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodySmall)
@@ -131,14 +179,17 @@ fun MacroBar(
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(7.dp)
+                .height(8.dp)
                 .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(99.dp)),
         ) {
             Box(
                 Modifier
                     .fillMaxWidth(animated)
-                    .height(7.dp)
-                    .background(color, RoundedCornerShape(99.dp)),
+                    .height(8.dp)
+                    .background(
+                        Brush.horizontalGradient(listOf(color.copy(alpha = 0.72f), color)),
+                        RoundedCornerShape(99.dp),
+                    ),
             )
         }
     }
@@ -147,16 +198,62 @@ fun MacroBar(
 @Composable
 fun SectionCard(
     modifier: Modifier = Modifier,
+    brush: Brush? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val shape = RoundedCornerShape(20.dp)
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(Modifier.padding(16.dp), content = content)
+        Column(
+            Modifier
+                .then(if (brush != null) Modifier.background(brush, shape) else Modifier)
+                .padding(16.dp),
+            content = content,
+        )
     }
+}
+
+/**
+ * Fades and pops a section in when it first appears, with an optional stagger delay.
+ * Cheap eye candy that also hides the one-frame flash of data arriving.
+ */
+@Composable
+fun PopIn(
+    modifier: Modifier = Modifier,
+    delayMs: Int = 0,
+    content: @Composable () -> Unit,
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(delayMs.toLong())
+        visible = true
+    }
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(320, easing = FastOutSlowInEasing),
+        label = "popAlpha",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.94f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessLow),
+        label = "popScale",
+    )
+    Box(modifier.graphicsLayer { this.alpha = alpha; scaleX = scale; scaleY = scale }) {
+        content()
+    }
+}
+
+/** Warm gradient for the hero card, derived from the theme so dark mode still reads right. */
+@Composable
+fun heroBrush(): Brush {
+    val colors = MaterialTheme.colorScheme
+    return Brush.verticalGradient(
+        listOf(colors.primaryContainer.copy(alpha = 0.65f), colors.surface),
+    )
 }
 
 /** Small pill showing what kind of entry this is. */
