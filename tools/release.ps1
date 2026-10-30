@@ -119,3 +119,6 @@ if ($created -ne 0) { throw 'gh release create failed' }
 
 Write-Host '[6/6] done'
 Write-Host "      Installed clients will see v$Version on their next update check."
+
+# explicit success: the informational --release lint above leaves $LASTEXITCODE = 1.
+exit 0
