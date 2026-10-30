@@ -111,9 +111,7 @@ fun AiSettingsScreen(
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                "照服务商文档抄。DeepSeek 现在用 deepseek-flash（识图也是它）或 deepseek-v4-pro，" +
-                    "地址填 https://api.deepseek.com 即可，会自动补 /chat/completions。" +
-                    "智谱是 glm-4-flash / glm-4v-flash。",
+                "DeepSeek：地址 https://api.deepseek.com，模型 deepseek-flash（识图同款）",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

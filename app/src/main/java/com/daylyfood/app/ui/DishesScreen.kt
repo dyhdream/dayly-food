@@ -179,8 +179,8 @@ private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
             }
             // Recipe detail stays out of the list; energy and macros are what you scan for.
             Text(
-                "每100g 蛋白 ${dish.protein100.roundToInt()} · 脂肪 ${dish.fat100.roundToInt()} · " +
-                    "碳水 ${dish.carb100.roundToInt()} g",
+                "每100${dish.baseUnit} 蛋白 ${dish.protein100.roundToInt()} · " +
+                    "脂肪 ${dish.fat100.roundToInt()} · 碳水 ${dish.carb100.roundToInt()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

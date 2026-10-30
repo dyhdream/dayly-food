@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -38,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -140,8 +142,8 @@ fun ProfileScreen(
 
         SectionCard {
             Text("活动量", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Spacer(Modifier.height(4.dp))
+            Column {
                 listOf(
                     1.2 to "久坐不动",
                     1.375 to "轻度活动（每周 1-3 次）",
@@ -150,12 +152,19 @@ fun ProfileScreen(
                     1.9 to "极高（体力工作）",
                 ).forEach { (v, label) ->
                     Row(
-                        Modifier.fillMaxWidth().clickable { activity = v }.padding(vertical = 8.dp),
+                        Modifier.fillMaxWidth()
+                            .selectable(selected = activity == v, onClick = { activity = v })
+                            .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        FilterChip(selected = activity == v, onClick = { activity = v }, label = {})
-                        Spacer(Modifier.width(10.dp))
-                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                        RadioButton(selected = activity == v, onClick = { activity = v })
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (activity == v) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
                     }
                 }
             }
@@ -377,7 +386,7 @@ fun HomeScreen(
                 }
             }
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(96.dp))
     }
 
     val editing = editingEntry

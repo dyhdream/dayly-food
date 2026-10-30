@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DiaryEntryEntity::class,
         ProfileEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,5 +28,18 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE diary_entry ADD COLUMN unit TEXT NOT NULL DEFAULT 'g'")
             }
         }
+
+        /** v3 fixes rows recorded before drinks knew about ml: the food says ml, the row said g. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(BACKFILL_ML_UNIT_SQL)
+            }
+        }
+
+        /** Shared with the test so the SQL that ships is the SQL that gets checked. */
+        val BACKFILL_ML_UNIT_SQL = """
+            UPDATE diary_entry SET unit = 'ml'
+            WHERE foodId IN (SELECT id FROM food_item WHERE baseUnit = 'ml')
+        """.trimIndent()
     }
 }
