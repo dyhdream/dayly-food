@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -58,7 +59,7 @@ class ScanViewModel @Inject constructor(
             return@launch
         }
 
-        val label = labelReader.read(bitmap).getOrNull()
+        val label = withTimeoutOrNull(OCR_TIMEOUT_MS) { labelReader.read(bitmap) }?.getOrNull()
         if (label != null) {
             _state.value = State.LabelReady(label)
             return@launch
@@ -81,8 +82,14 @@ class ScanViewModel @Inject constructor(
             return@launch
         }
 
-        val outcome = foodRecognizer.recognize(bitmap.toJpegBase64()).getOrElse { error ->
+        val outcome = withTimeoutOrNull(NETWORK_TIMEOUT_MS) {
+            foodRecognizer.recognize(bitmap.toJpegBase64())
+        }?.getOrElse { error ->
             _state.value = State.Failed(error.message ?: "识别失败")
+            return@launch
+        } ?: run {
+            // Never leave the user staring at "正在识别…".
+            _state.value = State.Failed("识别超时。检查网络后重拍，或手动添加。")
             return@launch
         }
 
@@ -211,5 +218,10 @@ class ScanViewModel @Inject constructor(
         val stream = ByteArrayOutputStream()
         compress(Bitmap.CompressFormat.JPEG, quality, stream)
         return Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+    }
+
+    private companion object {
+        const val OCR_TIMEOUT_MS = 25_000L
+        const val NETWORK_TIMEOUT_MS = 75_000L
     }
 }

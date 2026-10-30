@@ -2,6 +2,7 @@ package com.daylyfood.app
 
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -126,26 +127,38 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     // Camera and gallery open straight from the button; there is no intermediate screen.
     val context = LocalContext.current
     val photoStore = remember { TempPhotoStore(context) }
-    var pendingCameraLaunch by remember { mutableStateOf<Uri?>(null) }
+    // Filled only when the capture succeeds: the scan screen must never open on an empty file.
+    var cameraTarget by remember { mutableStateOf<Uri?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        if (!ok) scanUri = null
+        val target = cameraTarget
+        cameraTarget = null
+        if (ok && target != null) scanUri = target
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scanUri = uri
     }
-    LaunchedEffect(pendingCameraLaunch) {
-        pendingCameraLaunch?.let { uri ->
-            cameraLauncher.launch(uri)
-            pendingCameraLaunch = null
-        }
-    }
 
     fun launchCamera() {
-        val file = photoStore.newFile()
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        scanUri = uri
-        pendingCameraLaunch = uri
+        val uri = runCatching {
+            val file = photoStore.newFile()
+            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        }.getOrNull()
+        if (uri == null) {
+            Toast.makeText(context, "创建照片文件失败，改用相册", Toast.LENGTH_LONG).show()
+            galleryLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+            return
+        }
+        cameraTarget = uri
+        runCatching { cameraLauncher.launch(uri) }.onFailure {
+            cameraTarget = null
+            Toast.makeText(context, "这台设备没有可用的相机应用，改用相册", Toast.LENGTH_LONG).show()
+            galleryLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+        }
     }
 
     // Back leaves the current surface (compose/scan/settings -> search -> tab), and only then the app.
