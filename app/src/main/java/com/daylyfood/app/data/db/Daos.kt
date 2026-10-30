@@ -53,6 +53,20 @@ interface DiaryDao {
     @Query("DELETE FROM diary_entry WHERE id = :id")
     suspend fun delete(id: Long)
 
+    /** Rescales an entry in place; every RHS reads the old row, so the ratios stay intact. */
+    @Query(
+        """
+        UPDATE diary_entry SET
+            kcal = kcal * :newGrams / grams,
+            protein = protein * :newGrams / grams,
+            fat = fat * :newGrams / grams,
+            carb = carb * :newGrams / grams,
+            grams = :newGrams
+        WHERE id = :id AND grams > 0 AND :newGrams > 0
+        """
+    )
+    suspend fun updateGrams(id: Long, newGrams: Double)
+
     @Query("SELECT * FROM diary_entry WHERE epochDay = :day ORDER BY id")
     suspend fun list(day: Long): List<DiaryEntryEntity>
 

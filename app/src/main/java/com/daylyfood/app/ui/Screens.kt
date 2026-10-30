@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.BuildConfig
+import com.daylyfood.app.data.db.DiaryEntryEntity
 import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.ServingEntity
@@ -206,6 +207,8 @@ fun HomeScreen(
         else -> LocalDate.ofEpochDay(day).format(DateTimeFormatter.ofPattern("M月d日"))
     }
 
+    var editingEntry by remember { mutableStateOf<DiaryEntryEntity?>(null) }
+
     val target = profile?.let {
         Nutrition.targetKcal(Nutrition.tdee(Nutrition.bmr(it.sex, it.age, it.heightCm, it.weightKg), it.activity), it.goal, it.sex)
     } ?: 0.0
@@ -291,7 +294,7 @@ fun HomeScreen(
             }
             mealEntries.forEach { entry ->
                 Row(
-                    Modifier.fillMaxWidth(),
+                    Modifier.fillMaxWidth().clickable { editingEntry = entry },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -309,6 +312,49 @@ fun HomeScreen(
         }
         Spacer(Modifier.height(24.dp))
     }
+
+    val editing = editingEntry
+    if (editing != null) {
+        EditGramsDialog(
+            entry = editing,
+            onDismiss = { editingEntry = null },
+            onConfirm = { grams ->
+                vm.updateGrams(editing.id, grams)
+                editingEntry = null
+            },
+        )
+    }
+}
+
+@Composable
+private fun EditGramsDialog(
+    entry: DiaryEntryEntity,
+    onDismiss: () -> Unit,
+    onConfirm: (Double) -> Unit,
+) {
+    var text by remember(entry.id) { mutableStateOf(entry.grams.roundToInt().toString()) }
+    val grams = text.toDoubleOrNull() ?: entry.grams
+    val kcal = entry.kcal * grams / entry.grams
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("修改份量") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(entry.nameSnapshot)
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("克数") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                )
+                Text("约 ${kcal.roundToInt()} kcal", style = MaterialTheme.typography.titleMedium)
+            }
+        },
+        confirmButton = { TextButton(onClick = { onConfirm(grams) }) { Text("保存") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
 }
 
 /** Guess the meal slot from the clock so quick-add needs zero decisions. */

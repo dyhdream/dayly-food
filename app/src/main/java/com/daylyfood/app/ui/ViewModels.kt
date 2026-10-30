@@ -75,6 +75,10 @@ class HomeViewModel @Inject constructor(
 
     fun delete(id: Long) = viewModelScope.launch { diaryDao.delete(id) }
 
+    fun updateGrams(id: Long, grams: Double) = viewModelScope.launch {
+        if (grams > 0) diaryDao.updateGrams(id, grams)
+    }
+
     /** One tap re-records a recent food at its last portion, no search needed. */
     fun quickAdd(item: RecentFood, meal: String) = viewModelScope.launch {
         val factor = item.grams / 100.0

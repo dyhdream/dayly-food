@@ -5,10 +5,11 @@
 
 .DESCRIPTION
     The app updates itself from the latest GitHub Release, so publishing a release IS
-    the deploy step. Run from the repo root.
+    the deploy step. Paths are derived from this script's location so the file stays
+    pure ASCII (PowerShell 5.1 reads BOM-less .ps1 as ANSI and mangles non-ASCII paths).
 
 .EXAMPLE
-    .\tools\release.ps1 -Version 0.3.0 -Notes "- Added x`n- Fixed y"
+    .\tools\release.ps1 -Version 0.3.0 -Notes "- Added x"
     .\tools\release.ps1 -Version 0.3.1 -Notes "hotfix" -DryRun
 #>
 [CmdletBinding()]
@@ -24,38 +25,44 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Version must look like 0.3.0 (got '$Version')"
 }
 
-$repo = 'E:\学习资料\dayly-food'
-$buildRoot = 'D:\dev\dayly-food'   # ASCII path; AGP and unit tests break on the CJK path
-$env:JAVA_HOME = 'D:\tools\jdk-21'
-$env:ANDROID_HOME = 'D:\tools\android-sdk'
-$env:ANDROID_SDK_ROOT = 'D:\tools\android-sdk'
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+# Gradle/AGP and unit tests break on the CJK workspace path; build through a junction.
+$buildRoot = 'D:\dev\dayly-food'
+$jdk = 'D:\tools\jdk-21'
+$sdk = 'D:\tools\android-sdk'
+$gradle = 'D:\tools\gradle-8.11.1\bin\gradle.bat'
+
+$env:JAVA_HOME = $jdk
+$env:ANDROID_HOME = $sdk
+$env:ANDROID_SDK_ROOT = $sdk
 $env:GIT_TERMINAL_PROMPT = '0'
+$env:PYTHONIOENCODING = 'utf-8'
 
 $parts = $Version.Split('.')
 $versionCode = [int]$parts[0] * 10000 + [int]$parts[1] * 100 + [int]$parts[2]
 
 Write-Host "[1/6] bump to $Version (versionCode $versionCode)"
 $gradleFile = Join-Path $repo 'app\build.gradle.kts'
+if (-not (Test-Path -LiteralPath $gradleFile)) { throw "not found: $gradleFile" }
 $content = Get-Content -LiteralPath $gradleFile -Raw
 $content = [regex]::Replace($content, 'versionCode = \d+', "versionCode = $versionCode")
 $content = [regex]::Replace($content, 'versionName = "[^"]*"', "versionName = `"$Version`"")
-Set-Content -LiteralPath $gradleFile -Value $content -Encoding UTF8 -NoNewline
-
-if (-not (Test-Path $buildRoot)) {
-    throw "Build path $buildRoot is missing. Create it with: mklink /J `"$buildRoot`" `"$repo`""
-}
+Set-Content -LiteralPath $gradleFile -Value $content -Encoding UTF8
 
 Write-Host "[2/6] verify seed data"
-$env:PYTHONIOENCODING = 'utf-8'
 & python (Join-Path $repo 'tools\seed_lint.py') --dir (Join-Path $repo 'tools\seed') --release
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning 'seed lint --release reported problems; continuing only because unreviewed brand rows are expected during development'
+    Write-Warning 'seed lint --release reported issues (unreviewed brand rows are expected while developing)'
+}
+
+if (-not (Test-Path -LiteralPath $buildRoot)) {
+    throw "Build path $buildRoot is missing. Create it with: mklink /J `"$buildRoot`" `"$repo`""
 }
 
 Write-Host "[3/6] build release APK"
 Push-Location $buildRoot
 try {
-    & 'D:\tools\gradle-8.11.1\bin\gradle.bat' assembleRelease testDebugUnitTest
+    & $gradle assembleRelease testDebugUnitTest
     if ($LASTEXITCODE -ne 0) { throw 'gradle build failed' }
 }
 finally {
@@ -63,24 +70,25 @@ finally {
 }
 
 $apk = Join-Path $buildRoot 'app\build\outputs\apk\release\app-release.apk'
-if (-not (Test-Path $apk)) { throw "APK not found: $apk" }
+if (-not (Test-Path -LiteralPath $apk)) { throw "APK not found: $apk" }
 $dist = Join-Path $repo 'dist'
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 $staged = Join-Path $dist "dayly-food-$Version-release.apk"
 Copy-Item -LiteralPath $apk -Destination $staged -Force
-$sizeMb = [math]::Round((Get-Item $staged).Length / 1MB, 2)
+$sizeMb = [math]::Round((Get-Item -LiteralPath $staged).Length / 1MB, 2)
 Write-Host "      APK: $staged ($sizeMb MB)"
 
 if ($DryRun) {
-    Write-Host "[DryRun] stopping before commit/publish"
+    Write-Host '[DryRun] stopping before commit/publish'
     return
 }
 
-Write-Host "[4/6] commit and push"
+Write-Host '[4/6] commit and push'
 Push-Location $repo
 try {
     git add -A
     git -c user.name='xingyu' -c user.email='2796649514@qq.com' commit -m "chore(release): v$Version" -m $Notes
+    if ($LASTEXITCODE -ne 0) { throw 'git commit failed' }
     git push origin main
     if ($LASTEXITCODE -ne 0) { throw 'git push failed' }
 }
@@ -90,8 +98,9 @@ finally {
 
 Write-Host "[5/6] publish GitHub Release v$Version"
 if ([string]::IsNullOrWhiteSpace($Notes)) { $Notes = "v$Version" }
+gh release delete "v$Version" --yes 2>$null | Out-Null
 gh release create "v$Version" $staged --title "v$Version" --notes $Notes --latest
 if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
 
-Write-Host "[6/6] done"
-Write-Host "      Installed clients will now see v$Version on their next update check."
+Write-Host '[6/6] done'
+Write-Host "      Installed clients will see v$Version on their next update check."
