@@ -16,6 +16,8 @@ data class UpdateInfo(
     val sizeBytes: Long,
     /** "sha256:..." as published by GitHub; used to validate mirror downloads. */
     val sha256: String?,
+    /** Important updates cannot be postponed; see [UpdateChecker.isMandatory]. */
+    val mandatory: Boolean = false,
 )
 
 /**
@@ -46,9 +48,11 @@ class UpdateChecker @Inject constructor() {
             } ?: return@withContext null
             val url = asset.optString("browser_download_url")
             if (url.isBlank() || !isNewer(latest, BuildConfig.VERSION_NAME)) return@withContext null
+            val notes = json.optString("body").ifBlank { "新版本已发布" }
             UpdateInfo(
                 version = latest,
-                notes = json.optString("body").ifBlank { "新版本已发布" },
+                notes = notes,
+                mandatory = isMandatory(notes, latest, BuildConfig.VERSION_NAME),
                 downloadUrl = url,
                 sizeBytes = asset.optLong("size"),
                 sha256 = asset.optString("digest")
@@ -72,6 +76,19 @@ class UpdateChecker @Inject constructor() {
                 if (left != right) return left > right
             }
             return false
+        }
+
+        /**
+         * Important = the release notes say so, or the major version moved (0.x → 1.x).
+         * A release is marked important by putting 「重要更新」 in its notes body.
+         */
+        fun isMandatory(notes: String, latest: String, current: String): Boolean {
+            if (notes.contains("重要更新") || notes.contains("MANDATORY", ignoreCase = true)) {
+                return true
+            }
+            val a = parts(latest)
+            val b = parts(current)
+            return a.isNotEmpty() && b.isNotEmpty() && a[0] != b[0]
         }
 
         private fun parts(version: String): List<Int> =

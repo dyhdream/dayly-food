@@ -72,6 +72,7 @@ import com.daylyfood.app.ui.ProfileScreen
 import com.daylyfood.app.ui.RootViewModel
 import com.daylyfood.app.ui.ScanOverlay
 import com.daylyfood.app.ui.SearchScreen
+import com.daylyfood.app.ui.UpdateDialog
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -101,6 +102,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     val ready by root.ready.collectAsStateWithLifecycle(false)
     val profile by root.profile.collectAsStateWithLifecycle(null)
     val updateVm: UpdateViewModel = hiltViewModel()
+    val updateState by updateVm.state.collectAsStateWithLifecycle()
 
     // The one allowed post-start network call: delayed, silent, never on the critical path.
     LaunchedEffect(Unit) {
@@ -320,6 +322,16 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             }
         }
     }
+
+    // Update prompt sits above every screen: important releases must not be missed,
+    // optional ones can be postponed for this version only.
+    UpdateDialog(
+        state = updateState,
+        onInstall = updateVm::downloadAndInstall,
+        onPostpone = updateVm::postpone,
+        onRetry = { updateVm.check() },
+        onBrowser = { updateVm.openReleasePage() },
+    )
 }
 
 /** Tab icons pop a little when selected; the only motion the bottom bar needs. */
