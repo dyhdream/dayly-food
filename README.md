@@ -49,3 +49,19 @@ AI 侧统一走 OpenAI 兼容协议，预设阿里百炼 / 智谱 GLM / 月之�
 ## 隐私
 
 API Key 通过 Android Keystore（AES-GCM）加密保存，不备份、不写日志。图片仅在识别时上传到用户自己选择的模型服务商，本项目无自有服务端。
+
+## 本地构建
+
+工具链已备好：JDK 21 (`D:\tools\jdk-21`)、Android SDK (`D:\tools\android-sdk`)、Gradle 8.11.1 (`D:\tools\gradle-8.11.1`)。
+
+`powershell
+# 项目路径含中文会让 AGP 拒绝构建，且会破坏单元测试的 classpath。
+# 建一个纯 ASCII 的目录联接再构建：
+mklink /J D:\dev\dayly-food E:\学习资料\dayly-food
+cd D:\dev\dayly-food
+gradle assembleDebug          # 产物 app\build\outputs\apk\debug\app-debug.apk
+gradle testDebugUnitTest      # 10 个测试：BMR/TDEE 口径 + 种子导入与中文搜索
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+`
+
+首次构建约 5 分钟（下载依赖），之后增量在 10 秒级。

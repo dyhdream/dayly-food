@@ -23,3 +23,5 @@ secrets.properties
 third_party/
 .dsh-write-test.txt
 tools/*.log
+
+dist/
