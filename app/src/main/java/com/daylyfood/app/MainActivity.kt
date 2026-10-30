@@ -4,20 +4,37 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.daylyfood.app.ui.ComposeDishScreen
+import com.daylyfood.app.ui.DishesScreen
 import com.daylyfood.app.ui.HomeScreen
 import com.daylyfood.app.ui.LoadingScreen
 import com.daylyfood.app.ui.ProfileScreen
@@ -52,25 +69,26 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     val updateVm: UpdateViewModel = hiltViewModel()
 
     // The one allowed post-start network call: delayed, silent, never on the critical path.
-    // A failure only shows up inside the settings screen.
     LaunchedEffect(Unit) {
         delay(3_000)
         updateVm.check()
     }
 
-    var editingProfile by remember { mutableStateOf(false) }
+    if (!ready) {
+        LoadingScreen()
+        return
+    }
+
+    var tab by remember { mutableIntStateOf(0) }
     var searchMeal by remember { mutableStateOf<String?>(null) }
+    var composing by remember { mutableStateOf(false) }
 
     when {
-        !ready -> LoadingScreen()
-
-        profile == null || editingProfile -> ProfileScreen(
-            initial = profile,
-            onSave = { p ->
-                root.saveProfile(p)
-                editingProfile = false
-            },
-            onCancel = if (profile != null) ({ editingProfile = false }) else null,
+        // First run: the profile is the whole screen, no tabs.
+        profile == null -> ProfileScreen(
+            initial = null,
+            onSave = { root.saveProfile(it) },
+            onCancel = null,
         )
 
         searchMeal != null -> SearchScreen(
@@ -78,9 +96,52 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             onDone = { searchMeal = null },
         )
 
-        else -> HomeScreen(
-            onAdd = { meal -> searchMeal = meal },
-            onProfile = { editingProfile = true },
-        )
+        composing -> ComposeDishScreen(onDone = { composing = false })
+
+        else -> Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = WindowInsets(0),
+            bottomBar = {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                    NavigationBarItem(
+                        selected = tab == 0,
+                        onClick = { tab = 0 },
+                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                        label = { Text("记录") },
+                    )
+                    NavigationBarItem(
+                        selected = tab == 1,
+                        onClick = { tab = 1 },
+                        icon = { Icon(Icons.Default.List, contentDescription = null) },
+                        label = { Text("菜品") },
+                    )
+                    NavigationBarItem(
+                        selected = tab == 2,
+                        onClick = { tab = 2 },
+                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                        label = { Text("我的") },
+                    )
+                }
+            },
+        ) { padding ->
+            Box(Modifier.padding(padding)) {
+                Crossfade(targetState = tab, animationSpec = tween(220), label = "tab") { current ->
+                    when (current) {
+                        0 -> HomeScreen(
+                            onAdd = { meal -> searchMeal = meal },
+                            onProfile = { tab = 2 },
+                        )
+
+                        1 -> DishesScreen(onCompose = { composing = true })
+
+                        else -> ProfileScreen(
+                            initial = profile,
+                            onSave = { root.saveProfile(it) },
+                            onCancel = null,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

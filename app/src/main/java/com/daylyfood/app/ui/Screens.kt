@@ -55,6 +55,7 @@ import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.ServingEntity
 import com.daylyfood.app.domain.Nutrition
+import com.daylyfood.app.domain.guessMeal
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -489,12 +490,7 @@ private fun EntryRow(
 }
 
 /** Guess the meal slot from the clock so quick-add needs zero decisions. */
-private fun mealForNow(): String = when (LocalTime.now().hour) {
-    in 5..10 -> "breakfast"
-    in 11..14 -> "lunch"
-    in 17..21 -> "dinner"
-    else -> "snack"
-}
+private fun mealForNow(): String = guessMeal(LocalTime.now().hour)
 
 // ---------------------------------------------------------------- search
 

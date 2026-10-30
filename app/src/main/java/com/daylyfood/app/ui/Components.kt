@@ -1,5 +1,8 @@
 package com.daylyfood.app.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -51,6 +55,8 @@ fun CalorieRing(
     val over = target in 1..consumed
     val fraction = progressOf(consumed, target)
     val accent = if (over) MaterialTheme.colorScheme.error else primary
+    val animatedFraction by animateFloatAsState(fraction, tween(650), label = "ringFraction")
+    val animatedConsumed by animateIntAsState(consumed, tween(650), label = "ringValue")
 
     Box(modifier = modifier.size(200.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(200.dp)) {
@@ -66,11 +72,11 @@ fun CalorieRing(
                 size = arcSize,
                 style = Stroke(width = stroke, cap = StrokeCap.Round),
             )
-            if (fraction > 0f) {
+            if (animatedFraction > 0f) {
                 drawArc(
                     brush = Brush.sweepGradient(listOf(primarySoft, accent, accent)),
                     startAngle = -90f,
-                    sweepAngle = 360f * fraction,
+                    sweepAngle = 360f * animatedFraction,
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
@@ -80,7 +86,7 @@ fun CalorieRing(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "$consumed",
+                text = "$animatedConsumed",
                 style = MaterialTheme.typography.headlineMedium,
                 color = accent,
             )
@@ -111,6 +117,7 @@ fun MacroBar(
     modifier: Modifier = Modifier,
 ) {
     val fraction = progressOf(current, target)
+    val animated by animateFloatAsState(fraction, tween(500), label = "macroBar")
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodySmall)
@@ -129,7 +136,7 @@ fun MacroBar(
         ) {
             Box(
                 Modifier
-                    .fillMaxWidth(fraction)
+                    .fillMaxWidth(animated)
                     .height(7.dp)
                     .background(color, RoundedCornerShape(99.dp)),
             )

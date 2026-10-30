@@ -23,6 +23,12 @@ interface FoodDao {
     @Query("SELECT * FROM food_item ORDER BY CASE kind WHEN 'CUSTOM' THEN 0 WHEN 'DISH' THEN 1 WHEN 'INGREDIENT' THEN 2 ELSE 3 END, name LIMIT 20")
     suspend fun recent(): List<FoodEntity>
 
+    @Query("SELECT * FROM food_item WHERE kind = 'CUSTOM' ORDER BY name")
+    fun observeCustom(): Flow<List<FoodEntity>>
+
+    @Query("SELECT * FROM food_item WHERE kind = 'DISH' ORDER BY name")
+    fun observeDishes(): Flow<List<FoodEntity>>
+
     @Query("SELECT * FROM food_item WHERE id = :id")
     suspend fun byId(id: String): FoodEntity?
 
