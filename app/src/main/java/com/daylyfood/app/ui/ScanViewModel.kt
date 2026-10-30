@@ -42,15 +42,20 @@ class ScanViewModel @Inject constructor(
         data object Reading : State
         data class LabelReady(val label: NutritionLabelParser.Label) : State
         data class DishesReady(val items: List<RecognizedFood>) : State
-        data class Failed(val message: String, val offerAiSetup: Boolean = false) : State
+        data class Failed(
+            val message: String,
+            val offerAiSetup: Boolean = false,
+            /** What on-device OCR actually saw, shown so a parser gap can be reported. */
+            val rawText: String? = null,
+        ) : State
     }
 
     private val _state = MutableStateFlow<State?>(null)
     val state: StateFlow<State?> = _state.asStateFlow()
 
     /**
-     * Label first, model second. A nutrition label is printed text that on-device OCR reads
-     * for free, so we never spend a model call on one.
+     * Label first (free on-device OCR), model second. If the model then says "this is a label",
+     * ask it for the numbers instead of reporting failure — OCR missing must not dead-end.
      */
     fun start(uri: Uri) = viewModelScope.launch {
         _state.value = State.Reading
@@ -59,50 +64,57 @@ class ScanViewModel @Inject constructor(
             return@launch
         }
 
-        val label = withTimeoutOrNull(OCR_TIMEOUT_MS) { labelReader.read(bitmap) }?.getOrNull()
-        if (label != null) {
-            _state.value = State.LabelReady(label)
+        val ocrText = withTimeoutOrNull(OCR_TIMEOUT_MS) { labelReader.readText(bitmap) }
+            ?.getOrNull().orEmpty()
+        val parsed = NutritionLabelParser.parse(ocrText).takeIf { !it.isEmpty }?.per100()
+        if (parsed != null) {
+            _state.value = State.LabelReady(parsed)
             return@launch
         }
+        val rawText = ocrText.takeIf { it.isNotBlank() }?.take(400)
 
         val config = aiSettings.config.value
-        if (!config.visionEnabled) {
-            // Only the dish path needs AI; a label was already handled above for free.
-            _state.value = State.Failed(
-                "这张里没有营养成分表。\n想拍照认菜，需要打开「识图记餐」并填好模型接口。",
-                offerAiSetup = true,
-            )
-            return@launch
-        }
-        if (!config.isConfigured) {
-            _state.value = State.Failed(
-                "这张里没有营养成分表。\n拍照认菜要在「AI 设置」里填接口地址、模型名和 Key。",
-                offerAiSetup = true,
-            )
+        if (!config.visionEnabled || !config.isConfigured) {
+            val hint = if (!config.visionEnabled) {
+                "想拍照认菜，需要打开「识图记餐」并填好模型接口。"
+            } else {
+                "拍照认菜要在「AI 设置」里填接口地址、模型名和 Key。"
+            }
+            _state.value = State.Failed("没读出营养成分表。\n$hint", offerAiSetup = true, rawText = rawText)
             return@launch
         }
 
-        val outcome = withTimeoutOrNull(NETWORK_TIMEOUT_MS) {
-            foodRecognizer.recognize(bitmap.toJpegBase64())
-        }?.getOrElse { error ->
-            _state.value = State.Failed(error.message ?: "识别失败")
-            return@launch
-        } ?: run {
-            // Never leave the user staring at "正在识别…".
-            _state.value = State.Failed("识别超时。检查网络后重拍，或手动添加。")
-            return@launch
-        }
+        val jpeg = bitmap.toJpegBase64()
+        val outcome = withTimeoutOrNull(NETWORK_TIMEOUT_MS) { foodRecognizer.recognize(jpeg) }
+            ?.getOrElse { error ->
+                _state.value = State.Failed(error.message ?: "识别失败", rawText = rawText)
+                return@launch
+            } ?: run {
+                // Never leave the user staring at "正在识别…".
+                _state.value = State.Failed("识别超时。检查网络后重拍，或手动添加。", rawText = rawText)
+                return@launch
+            }
 
         when (outcome) {
-            is FoodReplyParser.Outcome.NotFood ->
-                _state.value = State.Failed("${outcome.reason}。\n换个角度重拍，或手动添加。")
+            is FoodReplyParser.Outcome.NotFood -> {
+                val labelFromModel = if (outcome.reason.contains("营养成分表")) {
+                    withTimeoutOrNull(NETWORK_TIMEOUT_MS) { foodRecognizer.extractLabel(jpeg) }?.getOrNull()
+                } else {
+                    null
+                }
+                _state.value = if (labelFromModel != null) {
+                    State.LabelReady(labelFromModel.per100())
+                } else {
+                    State.Failed("${outcome.reason}。\n换个角度重拍，或手动添加。", rawText = rawText)
+                }
+            }
 
             is FoodReplyParser.Outcome.Dishes -> {
                 // Resolve on the coroutine, then hand a plain map to the pure resolver.
                 val library = outcome.items.associate { it.name to lookup(it.name) }
                 val resolved = RecognizedFoodResolver.resolve(outcome.items) { library[it] }
                 _state.value = if (resolved.isEmpty()) {
-                    State.Failed("认出了食物，但没拿到可用数值。\n手动添加一次，它就会进库里。")
+                    State.Failed("认出了食物，但没拿到可用数值。\n手动添加一次，它就会进库里。", rawText = rawText)
                 } else {
                     State.DishesReady(resolved)
                 }

@@ -69,7 +69,7 @@ object NutritionLabelParser {
 
     /** Parses free text (model reply or OCR output). Tolerant: any missing field stays null. */
     fun parse(text: String): Label {
-        val normalized = normalize(text)
+        val normalized = cleanForParsing(normalize(text))
         val basis = when {
             PER_100_PATTERN.containsMatchIn(normalized) -> BASIS_PER_100
             PER_SERVING_PATTERN.containsMatchIn(normalized) -> BASIS_PER_SERVING
@@ -95,12 +95,23 @@ object NutritionLabelParser {
         )
     }
 
+    /**
+     * Keeps only the table: the rest of a back label (配料表, standards, addresses) carries
+     * numbers that must never be mistaken for nutrition values.
+     */
+    fun cleanForParsing(text: String): String {
+        val start = TABLE_HEADER.find(text)?.range?.first ?: 0
+        val rest = text.substring(start)
+        val stop = NOISE.find(rest)?.range?.first ?: return rest
+        return rest.substring(0, stop)
+    }
+
     fun kcalFrom(kj: Double): Double = kj / KJ_PER_KCAL
 
     private fun grab(text: String, pattern: Regex): Double? =
         pattern.find(text)?.groupValues?.getOrNull(1)?.toDoubleOrNull()
 
-    /** Full-width digits/punctuation and commas would otherwise break every pattern. */
+    /** Full-width digits/punctuation, thousands separators and OCR word gaps. */
     private fun normalize(text: String): String {
         val builder = StringBuilder(text.length)
         for (char in text) {
@@ -114,12 +125,14 @@ object NutritionLabelParser {
                 'Ｊ', 'ｊ' -> 'j'
                 'Ｍ', 'ｍ' -> 'm'
                 'Ｇ', 'ｇ' -> 'g'
-                '　' -> ' '
+                // OCR sprinkles spaces inside numbers and words ("能 量 1 823"), so all
+                // whitespace goes away; the patterns below never require a space.
+                ' ', '\u00A0', '\u3000', '\n', '\r', '\t' -> ' '
                 else -> char
             }
             builder.append(mapped)
         }
-        return builder.toString().replace(",", "")
+        return builder.toString().replace(",", "").replace(" ", "")
     }
 
     private const val BASIS_PER_100 = "PER_100"
@@ -134,10 +147,20 @@ object NutritionLabelParser {
         "(?:能量|热量|energy)[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*(kj|千焦|kcal|千卡|大卡)",
         RegexOption.IGNORE_CASE,
     )
-    private val PROTEIN_PATTERN = Regex("蛋白质[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*g", RegexOption.IGNORE_CASE)
+    private val NUM = "([0-9]+(?:\\.[0-9]+)?)"
+    private val PROTEIN_PATTERN = Regex("蛋白质[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
     // 「饱和脂肪」「反式脂肪」 sit above 脂肪 in the table and must not win the match.
-    private val FAT_PATTERN = Regex("(?<!饱和)(?<!反式)脂肪[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*g", RegexOption.IGNORE_CASE)
-    private val CARB_PATTERN = Regex("碳水化合物[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*g", RegexOption.IGNORE_CASE)
-    private val FIBER_PATTERN = Regex("膳食纤维[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*g", RegexOption.IGNORE_CASE)
-    private val SODIUM_PATTERN = Regex("钠[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*mg", RegexOption.IGNORE_CASE)
+    private val FAT_PATTERN = Regex("(?<!饱和)(?<!反式)脂肪[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val CARB_PATTERN = Regex("碳水化合物[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val FIBER_PATTERN = Regex("膳食纤维[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val SODIUM_PATTERN = Regex("钠[^0-9]{0,12}$NUM\\s*(?:mg|毫克)", RegexOption.IGNORE_CASE)
+
+    /** Everything from here on is the table; before it is marketing copy. */
+    private val TABLE_HEADER = Regex("(营养成分表|营养成份表|营养成分)")
+
+    /** Back-label sections whose numbers are never nutrition values. */
+    private val NOISE = Regex(
+        "(配料表|配料|产品名称|产品类别|产品标准号|执行标准|贮存条件|贮存方法|保存方法|" +
+            "生产日期|保质期|生产许可证|委托方|受托方|制造商|经销商|地址|服务热线|400|www\\.)",
+    )
 }

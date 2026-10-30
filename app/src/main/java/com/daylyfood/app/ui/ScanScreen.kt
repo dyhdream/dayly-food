@@ -126,10 +126,17 @@ fun ScanOverlay(
                         Text("去开启识图")
                     }
                 }
-                OutlinedButton(onClick = onManualAdd, modifier = Modifier.fillMaxWidth()) {
-                    Text("手动添加")
-                }
-                Text(
+                        OutlinedButton(onClick = onManualAdd, modifier = Modifier.fillMaxWidth()) {
+                            Text("手动添加")
+                        }
+                        current.rawText?.let { text ->
+                            Text(
+                                "识别到的文字：\n$text",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
                     "提示：营养表识别完全本地完成，不要钱；拍照认菜才会调用 AI。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

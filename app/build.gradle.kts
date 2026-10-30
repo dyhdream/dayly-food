@@ -14,8 +14,8 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 805
-        versionName = "0.8.5"
+        versionCode = 806
+        versionName = "0.8.6"
 
         // The OCR engine ships ~10 MB of native code per ABI and real phones here are all ARM.
         ndk {
@@ -88,6 +88,7 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }
+
 
 
 
