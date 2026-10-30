@@ -1,11 +1,9 @@
 package com.daylyfood.app.ui
 
-import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -49,76 +49,108 @@ import com.daylyfood.app.domain.CookingMethods
 import com.daylyfood.app.domain.MEAL_LABELS
 import kotlin.math.roundToInt
 
-/** Browse built-in dishes plus the ones the user composed, and log either in one tap. */
+/** Category filter for the browse screen; ALL is the default. */
+private enum class FoodFilter(val label: String, val kind: String?) {
+    ALL("默认", null),
+    DISH("菜品", "DISH"),
+    INGREDIENT("食材", "INGREDIENT"),
+    PACKAGED("包装", "PACKAGED"),
+    CUSTOM("自建", "CUSTOM"),
+}
+
+/** Browse anything: dishes, ingredients, packaged goods and self-made entries. */
 @Composable
 fun DishesScreen(
     onCompose: () -> Unit,
     vm: DishViewModel = hiltViewModel(),
 ) {
-    val mine by vm.myDishes.collectAsStateWithLifecycle(emptyList())
-    val builtIn by vm.builtInDishes.collectAsStateWithLifecycle(emptyList())
+    val all by vm.allFoods.collectAsStateWithLifecycle(emptyList())
     var pending by remember { mutableStateOf<FoodEntity?>(null) }
     var query by remember { mutableStateOf("") }
+    var filter by remember { mutableStateOf(FoodFilter.ALL) }
 
-    fun matches(food: FoodEntity): Boolean =
-        query.isBlank() ||
-            food.name.contains(query.trim(), ignoreCase = true) ||
-            food.notes?.contains(query.trim(), ignoreCase = true) == true
+    fun matches(food: FoodEntity): Boolean {
+        val q = query.trim()
+        val byName = q.isEmpty() ||
+            food.name.contains(q, ignoreCase = true) ||
+            food.notes?.contains(q, ignoreCase = true) == true
+        val byKind = filter.kind == null || food.kind == filter.kind
+        return byName && byKind
+    }
 
-    val mineShown = mine.filter(::matches)
-    val builtInShown = builtIn.filter(::matches)
+    val shown = all.filter(::matches)
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    LazyColumn(
+        Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Spacer(Modifier.height(8.dp))
-        Text("菜品", style = MaterialTheme.typography.headlineSmall)
-        Text(
-            "点一道菜直接记进餐次；也可以自己拼一道",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Button(onClick = onCompose, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("组合菜品（选食材 + 烹饪方式）")
-        }
-
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("搜索菜品") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        SectionCard {
-            Text("我的菜品 ${mineShown.size}", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(4.dp))
-            if (mineShown.isEmpty()) {
-                EmptyHint(
-                    if (mine.isEmpty()) "还没有。点上面的按钮，用食材拼出你常吃的那道菜"
-                    else "没有匹配的菜品"
+        item {
+            Column {
+                Spacer(Modifier.height(8.dp))
+                Text("查找", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "菜品、食材、包装食品都在这里；点一条直接记进餐次",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            mineShown.forEach { dish ->
-                DishRow(dish) { pending = dish }
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+        }
+
+        item {
+            Button(onClick = onCompose, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("组合菜品（选食材 + 烹饪方式）")
             }
         }
 
-        SectionCard {
-            Text("内置菜品 ${builtInShown.size}", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(4.dp))
-            if (builtInShown.isEmpty()) EmptyHint("没有匹配的菜品")
-            builtInShown.forEach { dish ->
-                DishRow(dish) { pending = dish }
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+        item {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("搜索名称，如香干、番茄炒蛋、可乐") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        item {
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FoodFilter.entries.forEach { option ->
+                    val count = all.count { f ->
+                        (option.kind == null || f.kind == option.kind) &&
+                            (query.isBlank() || f.name.contains(query.trim(), true))
+                    }
+                    FilterChip(
+                        selected = filter == option,
+                        onClick = { filter = option },
+                        label = { Text("${option.label} $count") },
+                    )
+                }
             }
         }
-        Spacer(Modifier.height(20.dp))
+
+        item {
+            Text(
+                "共 ${shown.size} 条",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        if (shown.isEmpty()) {
+            item { EmptyHint("没找到，换个说法或点上面的「组合菜品」") }
+        }
+
+        items(shown, key = { it.id }) { food ->
+            DishRow(food) { pending = food }
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+        }
+
+        item { Spacer(Modifier.height(16.dp)) }
     }
 
     val dish = pending
@@ -128,9 +160,7 @@ fun DishesScreen(
             subtitle = "约 ${dish.kcal100.roundToInt()} kcal/100g",
             suggested = vm.suggestedMeal(),
             onDismiss = { pending = null },
-            onPick = { meal ->
-                vm.logDish(dish.id, meal) { pending = null }
-            },
+            onPick = { meal -> vm.logDish(dish.id, meal) { pending = null } },
         )
     }
 }
@@ -142,8 +172,12 @@ private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(dish.name, style = MaterialTheme.typography.bodyMedium)
-            // The recipe itself stays out of the list; energy is what you scan for here.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(dish.name, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.width(6.dp))
+                KindBadge(dish.kind)
+            }
+            // Recipe detail stays out of the list; energy is what you scan for here.
             Text(
                 "每100g ${dish.kcal100.roundToInt()} kcal",
                 style = MaterialTheme.typography.bodySmall,
@@ -151,10 +185,7 @@ private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
                 maxLines = 1,
             )
         }
-        Text(
-            "${dish.kcal100.roundToInt()}",
-            style = MaterialTheme.typography.titleSmall,
-        )
+        Text("${dish.kcal100.roundToInt()}", style = MaterialTheme.typography.titleSmall)
         Text(
             " kcal",
             style = MaterialTheme.typography.bodySmall,
@@ -177,8 +208,11 @@ fun MealPickerDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Text("记到哪一餐？", style = MaterialTheme.typography.titleSmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     MEAL_LABELS.forEach { (key, label) ->
@@ -236,7 +270,10 @@ fun ComposeDishScreen(
                 EmptyHint("先搜索并加入食材")
             }
             state.items.forEach { item ->
-                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(item.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     OutlinedTextField(
                         value = item.grams.roundToInt().toString(),
@@ -247,8 +284,12 @@ fun ComposeDishScreen(
                         modifier = Modifier.width(96.dp),
                     )
                     IconButton(onClick = { vm.removeIngredient(item.foodId) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "移除",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "移除",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp),
+                        )
                     }
                 }
             }
@@ -273,8 +314,12 @@ fun ComposeDishScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Icon(Icons.Default.Add, contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
@@ -358,7 +403,7 @@ fun ComposeDishScreen(
         ) { Text("保存为我的菜品并记录") }
 
         Text(
-            "保存后可在「菜品 - 我的菜品」里再次使用；总热量由食材和油量精确相加，每 100g 数值按整盘重量折算。",
+            "保存后可在「查找」里再次使用；总热量由食材和油量精确相加，每 100g 数值按整盘重量折算。",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

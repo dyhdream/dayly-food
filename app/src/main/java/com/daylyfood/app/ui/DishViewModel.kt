@@ -34,6 +34,10 @@ class DishViewModel @Inject constructor(
     val builtInDishes: StateFlow<List<FoodEntity>> = foodDao.observeDishes()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /** Everything searchable: dishes, ingredients, packaged goods and self-made entries. */
+    val allFoods: StateFlow<List<FoodEntity>> = foodDao.observeAll()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     data class DraftItem(
         val foodId: String,
         val name: String,
