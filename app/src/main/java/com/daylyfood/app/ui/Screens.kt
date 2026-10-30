@@ -375,6 +375,7 @@ fun SearchScreen(
     val results by vm.results.collectAsStateWithLifecycle(emptyList())
     val selected by vm.selected.collectAsStateWithLifecycle(null)
     val servings by vm.servings.collectAsStateWithLifecycle(emptyList())
+    val showCustom by vm.showCustom.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -388,13 +389,29 @@ fun SearchScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
-        Text("共 ${results.size} 条 · 数据来自内置食物库", style = MaterialTheme.typography.bodySmall)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("共 ${results.size} 条 · 数据来自内置食物库", style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = vm::openCustom) { Text("＋ 手动添加") }
+        }
 
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             results.forEach { food ->
                 FoodRow(food) { vm.select(food) }
             }
         }
+    }
+
+    if (showCustom) {
+        CustomFoodDialog(
+            onDismiss = vm::closeCustom,
+            onConfirm = { name, label, grams, kcal, protein, fat, carb ->
+                vm.saveCustom(name, label, grams, kcal, protein, fat, carb, meal) { onDone() }
+            },
+        )
     }
 
     val food = selected
@@ -411,6 +428,7 @@ fun SearchScreen(
 @Composable
 private fun FoodRow(food: FoodEntity, onClick: () -> Unit) {
     val kindLabel = when (food.kind) {
+        "CUSTOM" -> "自建"
         "DISH" -> "菜品"
         "INGREDIENT" -> "食材"
         else -> "包装"
@@ -430,6 +448,69 @@ private fun FoodRow(food: FoodEntity, onClick: () -> Unit) {
         }
     }
     HorizontalDivider()
+}
+
+@Composable
+private fun CustomFoodDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (
+        name: String, label: String, grams: Double, kcal: Double,
+        protein: Double, fat: Double, carb: Double,
+    ) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    var label by remember { mutableStateOf("一份") }
+    var grams by remember { mutableStateOf("100") }
+    var kcal by remember { mutableStateOf("") }
+    var protein by remember { mutableStateOf("") }
+    var fat by remember { mutableStateOf("") }
+    var carb by remember { mutableStateOf("") }
+
+    val gramsV = grams.toDoubleOrNull() ?: 0.0
+    val kcalV = kcal.toDoubleOrNull() ?: 0.0
+    val ready = name.isNotBlank() && gramsV > 0 && kcalV >= 0
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("手动添加食物") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(name, { name = it }, label = { Text("名称，如「公司楼下的牛肉面」") }, singleLine = true)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(label, { label = it }, label = { Text("份量") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(grams, { grams = it }, label = { Text("克数") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+                }
+                OutlinedTextField(kcal, { kcal = it }, label = { Text("这一份的热量 kcal（必填）") }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth())
+                Text("三大营养素可不填，填了汇总更准", style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(protein, { protein = it }, label = { Text("蛋白 g") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+                    OutlinedTextField(fat, { fat = it }, label = { Text("脂肪 g") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+                    OutlinedTextField(carb, { carb = it }, label = { Text("碳水 g") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+                }
+                Text("保存后会自动记入当前餐次，以后可直接搜索到它", style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = ready,
+                onClick = {
+                    onConfirm(
+                        name, label, gramsV, kcalV,
+                        protein.toDoubleOrNull() ?: 0.0,
+                        fat.toDoubleOrNull() ?: 0.0,
+                        carb.toDoubleOrNull() ?: 0.0,
+                    )
+                },
+            ) { Text("保存并记录") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+    )
 }
 
 @Composable

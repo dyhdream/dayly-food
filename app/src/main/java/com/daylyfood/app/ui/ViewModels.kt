@@ -150,6 +150,87 @@ class SearchViewModel @Inject constructor(
         _servings.value = emptyList()
     }
 
+    // ---- user-defined foods -------------------------------------------------
+    // Stored as a normal food_item with kind=CUSTOM / source=local, so no schema
+    // migration is needed and it shows up in search like everything else.
+
+    private val _showCustom = MutableStateFlow(false)
+    val showCustom: StateFlow<Boolean> = _showCustom.asStateFlow()
+
+    fun openCustom() {
+        _showCustom.value = true
+    }
+
+    fun closeCustom() {
+        _showCustom.value = false
+    }
+
+    fun saveCustom(
+        name: String,
+        label: String,
+        grams: Double,
+        kcal: Double,
+        protein: Double,
+        fat: Double,
+        carb: Double,
+        meal: String,
+        onDone: () -> Unit,
+    ) = viewModelScope.launch {
+        if (name.isBlank() || grams <= 0 || kcal < 0) return@launch
+        val stamp = System.currentTimeMillis()
+        val foodId = "C${stamp.toString().takeLast(11)}"
+        val per100 = 100.0 / grams
+        val food = FoodEntity(
+            id = foodId,
+            name = name.trim(),
+            kind = "CUSTOM",
+            basis = "AS_SOLD",
+            category = "自定义",
+            brand = null,
+            baseUnit = "g",
+            kcal100 = kcal * per100,
+            protein100 = protein * per100,
+            fat100 = fat * per100,
+            carb100 = carb * per100,
+            fiber100 = null,
+            sodium100 = null,
+            source = "local",
+            sourceUrl = null,
+            confidence = "low",
+            verified = false,
+            notes = "用户自建",
+        )
+        foodDao.insertFoods(listOf(food))
+        foodDao.insertServings(
+            listOf(
+                ServingEntity(
+                    id = "S$foodId",
+                    foodId = foodId,
+                    label = label.ifBlank { "一份" },
+                    grams = grams,
+                    isDefault = true,
+                    sort = 1,
+                )
+            )
+        )
+        diaryDao.insert(
+            DiaryEntryEntity(
+                epochDay = LocalDate.now().toEpochDay(),
+                meal = meal,
+                foodId = foodId,
+                nameSnapshot = food.name,
+                grams = grams,
+                kcal = kcal,
+                protein = protein,
+                fat = fat,
+                carb = carb,
+                createdAt = stamp,
+            )
+        )
+        _showCustom.value = false
+        onDone()
+    }
+
     fun record(meal: String, grams: Double, onDone: () -> Unit) = viewModelScope.launch {
         val food = _selected.value ?: return@launch
         val factor = grams / 100.0

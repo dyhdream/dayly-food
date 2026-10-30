@@ -14,13 +14,13 @@ interface FoodDao {
         SELECT * FROM food_item
         WHERE name LIKE '%' || :q || '%'
            OR id IN (SELECT foodId FROM food_alias WHERE alias LIKE '%' || :q || '%')
-        ORDER BY CASE kind WHEN 'DISH' THEN 0 WHEN 'INGREDIENT' THEN 1 ELSE 2 END, name
+        ORDER BY CASE kind WHEN 'CUSTOM' THEN 0 WHEN 'DISH' THEN 1 WHEN 'INGREDIENT' THEN 2 ELSE 3 END, name
         LIMIT 40
         """
     )
     suspend fun search(q: String): List<FoodEntity>
 
-    @Query("SELECT * FROM food_item ORDER BY CASE kind WHEN 'DISH' THEN 0 WHEN 'INGREDIENT' THEN 1 ELSE 2 END, name LIMIT 20")
+    @Query("SELECT * FROM food_item ORDER BY CASE kind WHEN 'CUSTOM' THEN 0 WHEN 'DISH' THEN 1 WHEN 'INGREDIENT' THEN 2 ELSE 3 END, name LIMIT 20")
     suspend fun recent(): List<FoodEntity>
 
     @Query("SELECT * FROM food_item WHERE id = :id")
