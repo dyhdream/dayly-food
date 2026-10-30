@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +24,7 @@ import com.daylyfood.app.ui.ProfileScreen
 import com.daylyfood.app.ui.RootViewModel
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateViewModel
+import com.daylyfood.app.ui.theme.DaylyFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
@@ -31,8 +34,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+            DaylyFoodTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
+                ) {
                     AppRoot()
                 }
             }
@@ -47,7 +52,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     val updateVm: UpdateViewModel = hiltViewModel()
 
     // The one allowed post-start network call: delayed, silent, never on the critical path.
-    // A failure only shows up inside the settings screen as "检查失败".
+    // A failure only shows up inside the settings screen.
     LaunchedEffect(Unit) {
         delay(3_000)
         updateVm.check()

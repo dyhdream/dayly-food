@@ -14,8 +14,8 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 301
-        versionName = "0.3.1"
+        versionCode = 400
+        versionName = "0.4.0"
     }
 
     buildTypes {
@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.androidx.room.runtime)
@@ -78,6 +79,7 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }
+
 
 
 
