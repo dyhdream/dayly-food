@@ -177,9 +177,10 @@ private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
                 Spacer(Modifier.width(6.dp))
                 KindBadge(dish.kind)
             }
-            // Recipe detail stays out of the list; energy is what you scan for here.
+            // Recipe detail stays out of the list; energy and macros are what you scan for.
             Text(
-                "每100g ${dish.kcal100.roundToInt()} kcal",
+                "每100g 蛋白 ${dish.protein100.roundToInt()} · 脂肪 ${dish.fat100.roundToInt()} · " +
+                    "碳水 ${dish.carb100.roundToInt()} g",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

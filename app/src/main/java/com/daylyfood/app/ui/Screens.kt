@@ -674,7 +674,8 @@ private fun FoodRow(food: FoodEntity, onClick: () -> Unit) {
                 }
             }
             Text(
-                "每100${food.baseUnit} ${food.kcal100.roundToInt()} kcal",
+                "每100${food.baseUnit} 蛋白 ${food.protein100.roundToInt()} · " +
+                    "脂肪 ${food.fat100.roundToInt()} · 碳水 ${food.carb100.roundToInt()} g",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
