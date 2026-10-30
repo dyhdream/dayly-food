@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,7 +28,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.domain.MEAL_LABELS
@@ -45,10 +51,11 @@ import com.daylyfood.app.domain.RecognizedFood
 import kotlin.math.roundToInt
 
 /**
- * Result of one shot: either a nutrition label (read on device, free) or dishes (vision model).
+ * Result of one shot, shown as a dialog over whatever the user was doing: a failure is just a
+ * line of text, a success becomes the confirm form. No separate page in between.
  */
 @Composable
-fun ScanScreen(
+fun ScanOverlay(
     uri: Uri,
     meal: String,
     day: Long,
@@ -58,55 +65,62 @@ fun ScanScreen(
     onOpenAiSettings: () -> Unit,
     vm: ScanViewModel = hiltViewModel(),
 ) {
-    BackHandler(onBack = { vm.reset(); onDone() })
     val state by vm.state.collectAsStateWithLifecycle()
 
     // A new photo means a new attempt; the view model keeps no state across shots.
     LaunchedEffect(uri) { vm.start(uri) }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+    Dialog(
+        onDismissRequest = { vm.reset(); onDone() },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { vm.reset(); onDone() }) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "返回")
-            }
-            Text("识别结果", style = MaterialTheme.typography.headlineSmall)
-        }
-
-        when (val current = state) {
-            null, ScanViewModel.State.Reading -> {
-                Spacer(Modifier.height(24.dp))
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier.fillMaxWidth(0.92f).heightIn(max = 620.dp),
+        ) {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()).padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Text("正在识别…", style = MaterialTheme.typography.bodyMedium)
+                    Text("识别结果", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = { vm.reset(); onDone() }) { Text("关闭") }
                 }
-            }
 
-            is ScanViewModel.State.LabelReady -> LabelConfirmForm(
-                label = current.label,
-                meal = meal,
-                onSave = { name, grams, chosenMeal ->
-                    vm.saveLabel(name, current.label, grams, chosenMeal, day) { onDone() }
-                },
-            )
+                when (val current = state) {
+                    null, ScanViewModel.State.Reading -> {
+                        Spacer(Modifier.height(16.dp))
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(20.dp))
+                            Spacer(Modifier.width(10.dp))
+                            Text("正在识别…", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
 
-            is ScanViewModel.State.DishesReady -> DishesConfirmForm(
-                items = current.items,
-                meal = meal,
-                onSave = { kept, chosenMeal -> vm.saveDishes(kept, chosenMeal, day) { onDone() } },
-            )
+                    is ScanViewModel.State.LabelReady -> LabelConfirmForm(
+                        label = current.label,
+                        meal = meal,
+                        onSave = { name, grams, chosenMeal ->
+                            vm.saveLabel(name, current.label, grams, chosenMeal, day) { onDone() }
+                        },
+                    )
 
-            is ScanViewModel.State.Failed -> {
-                Text(
-                    current.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-                Button(onClick = onRetake, modifier = Modifier.fillMaxWidth()) { Text("重拍一张") }
+                    is ScanViewModel.State.DishesReady -> DishesConfirmForm(
+                        items = current.items,
+                        meal = meal,
+                        onSave = { kept, chosenMeal -> vm.saveDishes(kept, chosenMeal, day) { onDone() } },
+                    )
+
+                    is ScanViewModel.State.Failed -> {
+                        Text(
+                            current.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Button(onClick = onRetake, modifier = Modifier.fillMaxWidth()) { Text("重拍一张") }
                 if (current.offerAiSetup) {
                     Button(onClick = onOpenAiSettings, modifier = Modifier.fillMaxWidth()) {
                         Text("去开启识图")
@@ -121,8 +135,9 @@ fun ScanScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+                }
+            }
         }
-        Spacer(Modifier.height(20.dp))
     }
 }
 

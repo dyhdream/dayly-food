@@ -63,7 +63,7 @@ import com.daylyfood.app.ui.LoadingScreen
 import com.daylyfood.app.ui.MeScreen
 import com.daylyfood.app.ui.ProfileScreen
 import com.daylyfood.app.ui.RootViewModel
-import com.daylyfood.app.ui.ScanScreen
+import com.daylyfood.app.ui.ScanOverlay
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
@@ -199,23 +199,6 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             onDone = { composing = false; tab = 1 },
         )
 
-        scanUri != null -> ScanScreen(
-            uri = scanUri!!,
-            meal = guessMeal(LocalTime.now().hour),
-            day = LocalDate.now().toEpochDay(),
-            onDone = { scanUri = null },
-            onRetake = { scanUri = null; launchCamera() },
-            onManualAdd = {
-                scanUri = null
-                addMeal = guessMeal(LocalTime.now().hour)
-            },
-            onOpenAiSettings = {
-                scanUri = null
-                settingsPage = "ai"
-                tab = 2
-            },
-        )
-
         settingsPage == "profile" -> ProfileScreen(
             initial = profile,
             onSave = {
@@ -295,6 +278,27 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                         )
                     }
                 }
+            }
+
+            // One shot of the camera/gallery: a dialog on top of whatever tab is showing,
+            // so a failed read is one line of text rather than a page of its own.
+            scanUri?.let { uri ->
+                ScanOverlay(
+                    uri = uri,
+                    meal = guessMeal(LocalTime.now().hour),
+                    day = LocalDate.now().toEpochDay(),
+                    onDone = { scanUri = null },
+                    onRetake = { scanUri = null; launchCamera() },
+                    onManualAdd = {
+                        scanUri = null
+                        addMeal = guessMeal(LocalTime.now().hour)
+                    },
+                    onOpenAiSettings = {
+                        scanUri = null
+                        settingsPage = "ai"
+                        tab = 2
+                    },
+                )
             }
         }
     }

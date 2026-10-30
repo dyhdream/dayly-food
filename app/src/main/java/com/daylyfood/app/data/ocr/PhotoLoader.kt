@@ -24,15 +24,16 @@ class PhotoLoader @Inject constructor(
     suspend fun load(uri: Uri, maxPx: Int = 1600): Result<Bitmap> = withContext(Dispatchers.IO) {
         runCatching {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it, null, bounds)
-            } ?: error("读不到这张图片")
+            // decodeStream returns null on purpose here: it only fills `bounds`.
+            val probe = open(uri) ?: error("读不到这张图片")
+            probe.use { BitmapFactory.decodeStream(it, null, bounds) }
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) error("这张不是有效图片")
 
             val scale = maxOf(1, maxOf(bounds.outWidth, bounds.outHeight) / maxPx)
             val options = BitmapFactory.Options().apply { inSampleSize = scale }
-            val bitmap = context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it, null, options)
-            } ?: error("图片解码失败")
+            val stream = open(uri) ?: error("读不到这张图片")
+            val bitmap = stream.use { BitmapFactory.decodeStream(it, null, options) }
+                ?: error("图片解码失败")
 
             val rotated = rotateByExif(uri, bitmap)
             // Models and OCR both work better on a bounded long edge.
@@ -49,6 +50,11 @@ class PhotoLoader @Inject constructor(
             }
         }
     }
+
+    /** A missing or revoked uri throws rather than returning null; keep the message readable. */
+    private fun open(uri: Uri): java.io.InputStream? = runCatching {
+        context.contentResolver.openInputStream(uri)
+    }.getOrNull()
 
     private fun rotateByExif(uri: Uri, bitmap: Bitmap): Bitmap {
         val degrees = runCatching {
