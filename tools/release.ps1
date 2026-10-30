@@ -50,9 +50,14 @@ $content = [regex]::Replace($content, 'versionName = "[^"]*"', "versionName = `"
 Set-Content -LiteralPath $gradleFile -Value $content -Encoding UTF8
 
 Write-Host "[2/6] verify seed data"
-& python (Join-Path $repo 'tools\seed_lint.py') --dir (Join-Path $repo 'tools\seed') --release
+# Dev mode gates on real errors only. `--release` additionally demands every brand row be
+# verified with a source_url, which is only true right before a store submission.
+& python (Join-Path $repo 'tools\seed_lint.py') --dir (Join-Path $repo 'tools\seed')
+if ($LASTEXITCODE -ne 0) { throw 'seed data has errors; fix them before releasing' }
+$strict = & python (Join-Path $repo 'tools\seed_lint.py') --dir (Join-Path $repo 'tools\seed') --release 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning 'seed lint --release reported issues (unreviewed brand rows are expected while developing)'
+    $pending = ($strict | Select-String -Pattern '^ERROR' | Measure-Object).Count
+    Write-Warning "$pending brand row(s) still unreviewed; fine for a test build, blocking for a store release"
 }
 
 if (-not (Test-Path -LiteralPath $buildRoot)) {
