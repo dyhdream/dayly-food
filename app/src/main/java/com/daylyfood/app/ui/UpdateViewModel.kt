@@ -54,4 +54,6 @@ class UpdateViewModel @Inject constructor(
     fun reset() {
         _state.value = State.Idle
     }
+
+    fun openReleasePage() = installer.openReleasePage()
 }

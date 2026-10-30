@@ -179,9 +179,12 @@ fun ProfileScreen(
             is UpdateViewModel.State.Downloading ->
                 Text("正在下载 ${update.percent}%", style = MaterialTheme.typography.bodySmall)
 
-            is UpdateViewModel.State.Failed -> Row(verticalAlignment = Alignment.CenterVertically) {
+            is UpdateViewModel.State.Failed -> Column {
                 Text("检查失败：${update.message}", style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = updateVm::check) { Text("重试") }
+                Row {
+                    TextButton(onClick = updateVm::check) { Text("重试") }
+                    TextButton(onClick = updateVm::openReleasePage) { Text("用浏览器下载") }
+                }
             }
         }
 

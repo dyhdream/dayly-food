@@ -14,6 +14,8 @@ data class UpdateInfo(
     val notes: String,
     val downloadUrl: String,
     val sizeBytes: Long,
+    /** "sha256:..." as published by GitHub; used to validate mirror downloads. */
+    val sha256: String?,
 )
 
 /**
@@ -49,6 +51,9 @@ class UpdateChecker @Inject constructor() {
                 notes = json.optString("body").ifBlank { "新版本已发布" },
                 downloadUrl = url,
                 sizeBytes = asset.optLong("size"),
+                sha256 = asset.optString("digest")
+                    .removePrefix("sha256:")
+                    .takeIf { it.length == 64 },
             )
         } finally {
             connection.disconnect()
