@@ -1,0 +1,6 @@
+id,food_id,cooking_method_id,raw_total_g,cooked_total_g,notes
+R01,F101,C02,100,250,大米100g加水煮成250g饭
+R02,F102,C02,50,500,大米50g熬成500g粥
+R03,F103,C04,314,290,家常做法;油10g
+R04,F104,C04,268,240,油8g
+R05,F105,C05,345,280,油10g;糖15g收汁
