@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -44,6 +46,7 @@ import com.daylyfood.app.ui.HomeScreen
 import com.daylyfood.app.ui.LoadingScreen
 import com.daylyfood.app.ui.ProfileScreen
 import com.daylyfood.app.ui.RootViewModel
+import com.daylyfood.app.ui.ScanScreen
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
@@ -101,11 +104,13 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     var addMeal by remember { mutableStateOf<String?>(null) }
     var addDay by remember { mutableLongStateOf(LocalDate.now().toEpochDay()) }
     var composing by remember { mutableStateOf(false) }
+    var scanning by remember { mutableStateOf(false) }
 
-    // Back leaves the current surface (compose -> search -> tab), and only then the app.
-    BackHandler(enabled = composing || addMeal != null || tab != 0) {
+    // Back leaves the current surface (compose/scan -> search -> tab), and only then the app.
+    BackHandler(enabled = composing || scanning || addMeal != null || tab != 0) {
         when {
             composing -> composing = false
+            scanning -> scanning = false
             addMeal != null -> addMeal = null
             else -> tab = 0
         }
@@ -138,9 +143,26 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             onDone = { composing = false; tab = 1 },
         )
 
+        scanning -> ScanScreen(
+            meal = guessMeal(LocalTime.now().hour),
+            day = LocalDate.now().toEpochDay(),
+            onDone = { scanning = false },
+            onManualAdd = {
+                scanning = false
+                addMeal = guessMeal(LocalTime.now().hour)
+            },
+        )
+
         else -> Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = { scanning = true },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("拍照记") },
+                )
+            },
             bottomBar = {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(

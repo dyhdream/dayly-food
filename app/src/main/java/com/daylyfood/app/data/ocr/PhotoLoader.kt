@@ -1,0 +1,87 @@
+package com.daylyfood.app.data.ocr
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Decodes a picked photo down to a size OCR handles well. Labels carry small print, so the
+ * limit is generous compared with a photo meant as an avatar.
+ */
+@Singleton
+class PhotoLoader @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
+    suspend fun load(uri: Uri, maxPx: Int = 1600): Result<Bitmap> = withContext(Dispatchers.IO) {
+        runCatching {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, bounds)
+            } ?: error("读不到这张图片")
+
+            val scale = maxOf(1, maxOf(bounds.outWidth, bounds.outHeight) / maxPx)
+            val options = BitmapFactory.Options().apply { inSampleSize = scale }
+            val bitmap = context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, options)
+            } ?: error("图片解码失败")
+
+            val rotated = rotateByExif(uri, bitmap)
+            // Models and OCR both work better on a bounded long edge.
+            if (maxOf(rotated.width, rotated.height) > maxPx) {
+                val factor = maxPx.toFloat() / maxOf(rotated.width, rotated.height)
+                Bitmap.createScaledBitmap(
+                    rotated,
+                    (rotated.width * factor).toInt().coerceAtLeast(1),
+                    (rotated.height * factor).toInt().coerceAtLeast(1),
+                    true,
+                )
+            } else {
+                rotated
+            }
+        }
+    }
+
+    private fun rotateByExif(uri: Uri, bitmap: Bitmap): Bitmap {
+        val degrees = runCatching {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                when (
+                    ExifInterface(stream).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL,
+                    )
+                ) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                    ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                    ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                    else -> 0f
+                }
+            } ?: 0f
+        }.getOrDefault(0f)
+
+        if (degrees == 0f) return bitmap
+        val matrix = Matrix().apply { postRotate(degrees) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
+}
+
+/** Where the camera writes its full-size capture before we read it back. */
+@Singleton
+class TempPhotoStore @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
+    fun newFile(): File {
+        val dir = File(context.cacheDir, "photos").apply { mkdirs() }
+        // One file reused per shot: a stale capture is worthless and we do not want them piling up.
+        dir.listFiles()?.forEach { it.delete() }
+        return File(dir, "capture.jpg")
+    }
+}

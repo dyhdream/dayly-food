@@ -14,15 +14,19 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 700
-        versionName = "0.7.0"
+        versionCode = 800
+        versionName = "0.8.0"
+
+        // The OCR engine ships ~10 MB of native code per ABI and real phones here are all ARM.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            isShrinkResources = true
-            // shortcut: release is debug-signed so we can sideload test builds;
+            isShrinkResources = true            // shortcut: release is debug-signed so we can sideload test builds;
             // replace with a real keystore before publishing anywhere.
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
@@ -74,11 +78,17 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
+    // Offline OCR for nutrition labels. Bundled model: works with no Google Play Services
+    // and no API key, which is the whole point of keeping label scanning free.
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
 }
+
 
 
 
