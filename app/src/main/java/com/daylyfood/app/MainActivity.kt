@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +21,9 @@ import com.daylyfood.app.ui.LoadingScreen
 import com.daylyfood.app.ui.ProfileScreen
 import com.daylyfood.app.ui.RootViewModel
 import com.daylyfood.app.ui.SearchScreen
+import com.daylyfood.app.ui.UpdateViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -41,6 +44,14 @@ class MainActivity : ComponentActivity() {
 fun AppRoot(root: RootViewModel = hiltViewModel()) {
     val ready by root.ready.collectAsStateWithLifecycle(false)
     val profile by root.profile.collectAsStateWithLifecycle(null)
+    val updateVm: UpdateViewModel = hiltViewModel()
+
+    // The one allowed post-start network call: delayed, silent, never on the critical path.
+    // A failure only shows up inside the settings screen as "检查失败".
+    LaunchedEffect(Unit) {
+        delay(3_000)
+        updateVm.check()
+    }
 
     var editingProfile by remember { mutableStateOf(false) }
     var searchMeal by remember { mutableStateOf<String?>(null) }

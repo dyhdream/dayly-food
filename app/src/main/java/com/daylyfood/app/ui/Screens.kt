@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.daylyfood.app.BuildConfig
 import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.ServingEntity
@@ -68,7 +69,9 @@ fun ProfileScreen(
     initial: ProfileEntity?,
     onSave: (ProfileEntity) -> Unit,
     onCancel: (() -> Unit)?,
+    updateVm: UpdateViewModel = hiltViewModel(),
 ) {
+    val updateState by updateVm.state.collectAsStateWithLifecycle()
     var sex by remember { mutableStateOf(initial?.sex ?: "M") }
     var age by remember { mutableStateOf(initial?.age?.toString() ?: "28") }
     var height by remember { mutableStateOf(initial?.heightCm?.toString() ?: "175") }
@@ -148,6 +151,39 @@ fun ProfileScreen(
             }) { Text("保存") }
             if (onCancel != null) TextButton(onClick = onCancel) { Text("取消") }
         }
+
+        HorizontalDivider()
+        Text("应用更新", style = MaterialTheme.typography.titleSmall)
+        Text("当前版本 v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall)
+        when (val update = updateState) {
+            UpdateViewModel.State.Idle -> TextButton(onClick = updateVm::check) { Text("检查更新") }
+
+            UpdateViewModel.State.Checking ->
+                Text("正在检查…", style = MaterialTheme.typography.bodySmall)
+
+            UpdateViewModel.State.UpToDate -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("已是最新版本", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = updateVm::check) { Text("再查一次") }
+            }
+
+            is UpdateViewModel.State.Available -> {
+                Spacer(Modifier.height(4.dp))
+                Text("发现新版本 v${update.info.version}", style = MaterialTheme.typography.titleSmall)
+                update.info.notes.lineSequence().firstOrNull { it.isNotBlank() }?.let {
+                    Text(it.take(120), style = MaterialTheme.typography.bodySmall)
+                }
+                TextButton(onClick = { updateVm.downloadAndInstall(update.info) }) { Text("下载并安装") }
+            }
+
+            is UpdateViewModel.State.Downloading ->
+                Text("正在下载 ${update.percent}%", style = MaterialTheme.typography.bodySmall)
+
+            is UpdateViewModel.State.Failed -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("检查失败：${update.message}", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = updateVm::check) { Text("重试") }
+            }
+        }
+
         Spacer(Modifier.height(24.dp))
     }
 }
