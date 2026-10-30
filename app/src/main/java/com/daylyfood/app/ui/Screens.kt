@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
@@ -99,37 +99,7 @@ fun ProfileScreen(
     initial: ProfileEntity?,
     onSave: (ProfileEntity) -> Unit,
     onCancel: (() -> Unit)?,
-    updateVm: UpdateViewModel = hiltViewModel(),
 ) {
-    val updateState by updateVm.state.collectAsStateWithLifecycle()
-
-    val context = LocalContext.current
-    val backupVm: BackupViewModel = hiltViewModel()
-    val backupState by backupVm.state.collectAsStateWithLifecycle()
-
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            backupVm.export { json ->
-                runCatching {
-                    context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-                }.getOrNull() != null
-            }
-        }
-    }
-
-    var pendingRestore by remember { mutableStateOf<String?>(null) }
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            pendingRestore = runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            }.getOrNull()
-        }
-    }
-
     var sex by remember { mutableStateOf(initial?.sex ?: "M") }
     var age by remember { mutableStateOf((initial?.age ?: 30).toString()) }
     var height by remember { mutableStateOf((initial?.heightCm?.roundToInt() ?: 175).toString()) }
@@ -229,119 +199,9 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
         ) { Text("保存") }
 
-        AiSettingsCard()
-
-        SectionCard {
-            Text("应用更新", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(6.dp))
-            Text("当前版本 v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(4.dp))
-            when (val update = updateState) {
-                UpdateViewModel.State.Idle ->
-                    TextButton(onClick = updateVm::check) { Text("检查更新") }
-
-                UpdateViewModel.State.Checking ->
-                    Text("正在检查…", style = MaterialTheme.typography.bodySmall)
-
-                UpdateViewModel.State.UpToDate ->
-                    Text("已是最新版本", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-                is UpdateViewModel.State.Available -> {
-                    Text("发现新版本 v${update.info.version}", style = MaterialTheme.typography.titleSmall)
-                    update.info.notes.lineSequence().firstOrNull { it.isNotBlank() }?.let {
-                        Text(it.take(120), style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Button(onClick = { updateVm.downloadAndInstall(update.info) }) { Text("下载并安装") }
-                }
-
-                is UpdateViewModel.State.Downloading -> {
-                    Text("正在下载 ${update.percent}%", style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(6.dp))
-                    Box(
-                        Modifier.fillMaxWidth().height(6.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                    ) {
-                        Box(
-                            Modifier.fillMaxWidth(update.percent / 100f).height(6.dp)
-                                .background(MaterialTheme.colorScheme.primary),
-                        )
-                    }
-                }
-
-                is UpdateViewModel.State.Failed -> {
-                    Text(
-                        "更新失败：${update.message}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    Row {
-                        TextButton(onClick = updateVm::check) { Text("重试") }
-                        TextButton(onClick = updateVm::openReleasePage) { Text("浏览器下载") }
-                    }
-                }
-            }
-        }
-        SectionCard {
-            Text("数据备份", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "记录只存在这台手机上，卸载或换机就没了。建议偶尔导出一份存到网盘。",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { exportLauncher.launch(backupVm.suggestedFileName()) }) {
-                    Text("导出备份")
-                }
-                OutlinedButton(onClick = {
-                    importLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
-                }) { Text("恢复备份") }
-            }
-            when (val backup = backupState) {
-                BackupViewModel.State.Idle -> Unit
-                BackupViewModel.State.Working ->
-                    Text("处理中…", style = MaterialTheme.typography.bodySmall)
-
-                is BackupViewModel.State.Done -> Text(
-                    backup.message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-
-                is BackupViewModel.State.Failed -> Text(
-                    backup.message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-
         Spacer(Modifier.height(24.dp))
     }
-
-    val restoreText = pendingRestore
-    if (restoreText != null) {
-        AlertDialog(
-            onDismissRequest = { pendingRestore = null },
-            title = { Text("恢复备份") },
-            text = {
-                Text("会用备份内容覆盖当前的所有记录和自建食物，确定继续？")
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    backupVm.restore(restoreText)
-                    pendingRestore = null
-                }) { Text("覆盖恢复") }
-            },
-            dismissButton = { TextButton(onClick = { pendingRestore = null }) { Text("取消") } },
-        )
-    }
 }
-
 @Composable
 private fun NumberField(
     label: String,

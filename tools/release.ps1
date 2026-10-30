@@ -94,8 +94,17 @@ try {
     git add -A
     git -c user.name='xingyu' -c user.email='2796649514@qq.com' commit -m "chore(release): v$Version" -m $Notes
     if ($LASTEXITCODE -ne 0) { throw 'git commit failed' }
-    git push origin main
-    if ($LASTEXITCODE -ne 0) { throw 'git push failed' }
+    # HTTP/2 to github.com drops long pushes here (408 / "remote end hung up"); HTTP/1.1 plus
+    # retries turned a hard failure into a normal one, so keep it.
+    $pushed = $false
+    for ($attempt = 1; $attempt -le 4; $attempt++) {
+        git -c http.version=HTTP/1.1 -c http.postBuffer=52428800 `
+            -c http.lowSpeedLimit=0 -c http.lowSpeedTime=600 push origin main
+        if ($LASTEXITCODE -eq 0) { $pushed = $true; break }
+        Write-Host "      push attempt $attempt failed, retrying"
+        Start-Sleep -Seconds 4
+    }
+    if (-not $pushed) { throw 'git push failed after 4 attempts' }
 }
 finally {
     Pop-Location

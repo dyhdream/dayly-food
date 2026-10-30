@@ -32,13 +32,10 @@ class AiSettingsViewModel @Inject constructor(
 
     fun maskedKey(): String? = settings.maskedKey()
 
-    fun selectProvider(providerId: String) {
-        settings.setProvider(providerId)
-        _test.value = TestState.Idle
-    }
-
-    fun saveKey(apiKey: String) {
-        settings.saveKey(apiKey)
+    fun saveConfig(url: String, model: String, key: String) {
+        settings.setEndpoint(url)
+        settings.setModel(model)
+        if (key.isNotBlank()) settings.saveKey(key)
         _test.value = TestState.Idle
     }
 

@@ -9,8 +9,13 @@ import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * The user types the endpoint and model name themselves: provider model ids change faster
+ * than any preset list we could ship, and a wrong guess would only get in their way.
+ */
 data class AiConfig(
-    val providerId: String = AiProviders.DEFAULT.id,
+    val endpointUrl: String = "",
+    val modelName: String = "",
     val visionEnabled: Boolean = false,
     /** Daily review agent: off by default, it costs money and not everyone wants it. */
     val summaryEnabled: Boolean = false,
@@ -20,10 +25,12 @@ data class AiConfig(
     val hasKey: Boolean = false,
     val usedToday: Int = 0,
 ) {
-    val provider: AiProvider get() = AiProviders.byId(providerId)
-    val visionAvailable: Boolean get() = provider.supportsVision
+    val isConfigured: Boolean
+        get() = endpointUrl.isNotBlank() && modelName.isNotBlank() && hasKey
+
     val remainingToday: Int get() = (dailyCallLimit - usedToday).coerceAtLeast(0)
-    val canCall: Boolean get() = hasKey && remainingToday > 0
+
+    val canCall: Boolean get() = isConfigured && remainingToday > 0
 }
 
 /**
@@ -47,16 +54,16 @@ class AiSettings @Inject constructor(
     val config: StateFlow<AiConfig> = _config.asStateFlow()
 
     private fun readConfig(): AiConfig {
-        val providerId = prefs.getString(KEY_PROVIDER, AiProviders.DEFAULT.id) ?: AiProviders.DEFAULT.id
         val today = todayEpochDay()
         val used = if (prefs.getLong(KEY_USAGE_DAY, 0L) == today) prefs.getInt(KEY_USAGE_COUNT, 0) else 0
         return AiConfig(
-            providerId = providerId,
+            endpointUrl = prefs.getString(KEY_URL, "").orEmpty(),
+            modelName = prefs.getString(KEY_MODEL, "").orEmpty(),
             visionEnabled = prefs.getBoolean(KEY_VISION, false),
             summaryEnabled = prefs.getBoolean(KEY_SUMMARY, false),
             weeklyEnabled = prefs.getBoolean(KEY_WEEKLY, false),
             dailyCallLimit = prefs.getInt(KEY_LIMIT, 20),
-            hasKey = keyStore.has(providerId),
+            hasKey = keyStore.has(KEY_SLOT),
             usedToday = used,
         )
     }
@@ -65,18 +72,22 @@ class AiSettings @Inject constructor(
         _config.value = readConfig()
     }
 
-    fun setProvider(providerId: String) {
-        prefs.edit().putString(KEY_PROVIDER, providerId).apply()
+    fun setEndpoint(url: String) {
+        prefs.edit().putString(KEY_URL, url.trim()).apply()
+        refresh()
+    }
+
+    fun setModel(model: String) {
+        prefs.edit().putString(KEY_MODEL, model.trim()).apply()
         refresh()
     }
 
     fun saveKey(apiKey: String) {
-        val providerId = _config.value.providerId
-        if (apiKey.isBlank()) keyStore.clear(providerId) else keyStore.save(providerId, apiKey)
+        if (apiKey.isBlank()) keyStore.clear(KEY_SLOT) else keyStore.save(KEY_SLOT, apiKey)
         refresh()
     }
 
-    fun maskedKey(): String? = keyStore.masked(_config.value.providerId)
+    fun maskedKey(): String? = keyStore.masked(KEY_SLOT)
 
     fun setVisionEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_VISION, enabled).apply()
@@ -98,7 +109,7 @@ class AiSettings @Inject constructor(
         refresh()
     }
 
-    fun readKey(): String? = keyStore.read(_config.value.providerId)
+    fun readKey(): String? = keyStore.read(KEY_SLOT)
 
     /** Records one call against today's budget. */
     fun recordCall() {
@@ -114,7 +125,9 @@ class AiSettings @Inject constructor(
     private fun todayEpochDay(): Long = LocalDate.now().toEpochDay()
 
     private companion object {
-        const val KEY_PROVIDER = "provider"
+        const val KEY_SLOT = "custom"
+        const val KEY_URL = "endpointUrl"
+        const val KEY_MODEL = "modelName"
         const val KEY_VISION = "vision"
         const val KEY_SUMMARY = "summary"
         const val KEY_WEEKLY = "weekly"

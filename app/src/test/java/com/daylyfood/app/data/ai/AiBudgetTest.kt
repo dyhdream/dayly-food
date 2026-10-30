@@ -32,21 +32,28 @@ class AiBudgetTest {
     }
 
     @Test
-    fun `provider presets are consistent`() {
-        assertEquals("zhipu", AiProviders.DEFAULT.id)
-        assertTrue(AiProviders.ZHIPU.supportsVision)
-        assertFalse(AiProviders.DEEPSEEK.supportsVision)
-        // unknown ids fall back to the default rather than crashing
-        assertEquals(AiProviders.DEFAULT.id, AiProviders.byId("nope").id)
-    }
-
-    @Test
-    fun `config defaults keep paid agents off`() {
+    fun `config defaults keep paid agents off and call nothing`() {
         val config = AiConfig()
         assertFalse(config.visionEnabled)
         assertFalse(config.summaryEnabled)
         assertFalse(config.weeklyEnabled)
-        assertFalse(config.hasKey)
+        assertFalse(config.isConfigured)
         assertFalse(config.canCall)
+    }
+
+    @Test
+    fun `all three fields are required before any call`() {
+        val base = AiConfig(
+            endpointUrl = "https://example.com/v1/chat/completions",
+            modelName = "some-vision-model",
+            hasKey = true,
+        )
+        assertTrue(base.isConfigured)
+        assertTrue(base.canCall)
+
+        assertFalse(base.copy(endpointUrl = "").isConfigured)
+        assertFalse(base.copy(modelName = "").isConfigured)
+        assertFalse(base.copy(hasKey = false).isConfigured)
+        assertFalse(base.copy(usedToday = 20).canCall)
     }
 }

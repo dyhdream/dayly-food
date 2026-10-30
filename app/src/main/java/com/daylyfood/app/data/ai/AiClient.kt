@@ -11,49 +11,51 @@ import javax.inject.Singleton
 
 /**
  * The single exit point for every model call: one auth path, one timeout policy,
- * one daily budget, one error vocabulary.
+ * one daily budget, one error vocabulary. The endpoint and model come from settings.
  */
 @Singleton
 class AiClient @Inject constructor(
     private val settings: AiSettings,
 ) {
 
-    /** Sends a trivial prompt so the user can verify the key before using any agent. */
-    suspend fun testConnection(): Result<String> = runCall { provider, key ->
+    /** Sends a trivial prompt so the user can verify URL + model + key before using any agent. */
+    suspend fun testConnection(): Result<String> = runCall { config, key ->
         post(
-            url = provider.chatUrl,
+            url = config.endpointUrl,
             apiKey = key,
-            body = textBody(provider.textModel, "你是连通性测试助手。只回复两个字：可用", "测试一下", maxTokens = 32),
+            body = textBody(config.modelName, "你是连通性测试助手。只回复两个字：可用", "测试一下", maxTokens = 32),
         )
     }
 
-    suspend fun completeText(system: String, user: String): Result<String> = runCall { provider, key ->
+    suspend fun completeText(system: String, user: String): Result<String> = runCall { config, key ->
         post(
-            url = provider.chatUrl,
+            url = config.endpointUrl,
             apiKey = key,
-            body = textBody(provider.textModel, system, user, maxTokens = 800),
+            body = textBody(config.modelName, system, user, maxTokens = 800),
         )
     }
 
     suspend fun completeVision(system: String, prompt: String, jpegBase64: String): Result<String> =
-        runCall { provider, key ->
-            if (!provider.supportsVision) error("${provider.label} 不支持识图，换个供应商")
+        runCall { config, key ->
             post(
-                url = provider.chatUrl,
+                url = config.endpointUrl,
                 apiKey = key,
-                body = visionBody(provider.visionModel, system, prompt, jpegBase64),
+                body = visionBody(config.modelName, system, prompt, jpegBase64),
             )
         }
 
-    private suspend fun runCall(block: (AiProvider, String) -> String): Result<String> =
+    private suspend fun runCall(block: (AiConfig, String) -> String): Result<String> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val config = settings.config.value
+                if (config.endpointUrl.isBlank() || config.modelName.isBlank()) {
+                    error("还没有填写接口地址和模型名")
+                }
                 if (!CallBudget.canCall(config.usedToday, config.dailyCallLimit)) {
                     error("今日调用次数已用完，明天再试或调高上限")
                 }
                 val key = settings.readKey() ?: error("还没有填写 API Key")
-                val text = block(config.provider, key)
+                val text = block(config, key)
                 settings.recordCall()
                 text
             }
@@ -137,7 +139,7 @@ class AiClient @Inject constructor(
         }.getOrNull()?.takeIf { it.isNotBlank() }
         val reason = when (code) {
             401, 403 -> "Key 无效或没有该模型权限"
-            404 -> "模型名或地址不对"
+            404 -> "地址或模型名不对"
             429 -> "调用太频繁，稍后再试"
             in 500..599 -> "服务端繁忙"
             else -> "调用失败 HTTP $code"
