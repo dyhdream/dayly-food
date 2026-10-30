@@ -65,3 +65,22 @@ adb install -r app\build\outputs\apk\debug\app-debug.apk
 `
 
 首次构建约 5 分钟（下载依赖），之后增量在 10 秒级。
+
+## 更新与发版
+
+本项目**没有后端**，更新源就是 GitHub Releases（公开仓库，API 免鉴权）。
+
+- App 首帧后延迟 3 秒静默检查更新；设置页也有「检查更新」按钮
+- 发现新版本 → 应用内下载 APK → 交给系统安装器覆盖安装
+- 失败只显示在设置页，不弹窗、不阻塞任何记录操作
+
+发一个版本只要一条命令：
+
+`powershell
+.\tools\release.ps1 -Version 0.2.2 -Notes "- 改了什么"
+`
+
+它会：改 versionName/versionCode → 跑 seed 数据校验 → 构建 release 包 + 跑单测 →
+提交推送 → 发布 GitHub Release 并上传 APK。已装用户下次检查即可收到更新。
+
+注意：release 当前用 debug 证书签名（可侧载，**不可上架**）；正式发布前需换自己的 keystore。
