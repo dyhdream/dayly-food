@@ -64,6 +64,9 @@ class AiClient @Inject constructor(
             }
         }
 
+    // Request shape copied from the providers' own docs (OpenAI-compatible):
+    // model + messages, and for images a content block array in the user message only —
+    // images in system/assistant messages are rejected with 400.
     private fun textBody(model: String, system: String, user: String, maxTokens: Int): String =
         JSONObject()
             .put("model", model)
@@ -75,6 +78,7 @@ class AiClient @Inject constructor(
             )
             .put("temperature", 0.2)
             .put("max_tokens", maxTokens)
+            .put("stream", false)
             .toString()
 
     private fun visionBody(
@@ -104,6 +108,7 @@ class AiClient @Inject constructor(
         )
         .put("temperature", 0.1)
         .put("max_tokens", 1000)
+        .put("stream", false)
         .toString()
 
     private fun post(
