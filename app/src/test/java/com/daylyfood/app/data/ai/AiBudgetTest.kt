@@ -2,6 +2,7 @@ package com.daylyfood.app.data.ai
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -55,5 +56,22 @@ class AiBudgetTest {
         assertFalse(base.copy(modelName = "").isConfigured)
         assertFalse(base.copy(hasKey = false).isConfigured)
         assertFalse(base.copy(usedToday = 20).canCall)
+    }
+
+    @Test
+    fun `lifetime tokens add up and cost needs prices`() {
+        val config = AiConfig(promptTokens = 1_500_000, completionTokens = 500_000)
+        assertEquals(2_000_000, config.totalTokens)
+        // no prices entered yet: report "unknown", never a confident 0.00
+        assertNull(config.estimatedCost)
+
+        val priced = config.copy(pricePerMillionIn = 1.0, pricePerMillionOut = 2.0)
+        assertEquals(1.5 + 1.0, priced.estimatedCost!!, 0.0001)
+    }
+
+    @Test
+    fun `zero usage costs nothing once prices are known`() {
+        val config = AiConfig(pricePerMillionIn = 10.0, pricePerMillionOut = 10.0)
+        assertEquals(0.0, config.estimatedCost!!, 0.0001)
     }
 }

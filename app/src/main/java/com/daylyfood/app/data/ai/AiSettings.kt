@@ -24,6 +24,12 @@ data class AiConfig(
     val dailyCallLimit: Int = 20,
     val hasKey: Boolean = false,
     val usedToday: Int = 0,
+    /** Lifetime usage, so the user can see what this has actually cost them. */
+    val promptTokens: Long = 0,
+    val completionTokens: Long = 0,
+    /** 元 per million tokens, typed by the user; 0 hides the money figure. */
+    val pricePerMillionIn: Double = 0.0,
+    val pricePerMillionOut: Double = 0.0,
 ) {
     val isConfigured: Boolean
         get() = endpointUrl.isNotBlank() && modelName.isNotBlank() && hasKey
@@ -31,6 +37,16 @@ data class AiConfig(
     val remainingToday: Int get() = (dailyCallLimit - usedToday).coerceAtLeast(0)
 
     val canCall: Boolean get() = isConfigured && remainingToday > 0
+
+    val totalTokens: Long get() = promptTokens + completionTokens
+
+    /** Null when the user has not entered prices: we show tokens only rather than a fake 0. */
+    val estimatedCost: Double?
+        get() {
+            if (pricePerMillionIn <= 0 && pricePerMillionOut <= 0) return null
+            return promptTokens / 1_000_000.0 * pricePerMillionIn +
+                completionTokens / 1_000_000.0 * pricePerMillionOut
+        }
 }
 
 /**
@@ -65,6 +81,10 @@ class AiSettings @Inject constructor(
             dailyCallLimit = prefs.getInt(KEY_LIMIT, 20),
             hasKey = keyStore.has(KEY_SLOT),
             usedToday = used,
+            promptTokens = prefs.getLong(KEY_PROMPT_TOKENS, 0L),
+            completionTokens = prefs.getLong(KEY_COMPLETION_TOKENS, 0L),
+            pricePerMillionIn = prefs.getFloat(KEY_PRICE_IN, 0f).toDouble(),
+            pricePerMillionOut = prefs.getFloat(KEY_PRICE_OUT, 0f).toDouble(),
         )
     }
 
@@ -73,7 +93,7 @@ class AiSettings @Inject constructor(
     }
 
     fun setEndpoint(url: String) {
-        prefs.edit().putString(KEY_URL, url.trim()).apply()
+        prefs.edit().putString(KEY_URL, EndpointNormalizer.normalize(url)).apply()
         refresh()
     }
 
@@ -109,6 +129,23 @@ class AiSettings @Inject constructor(
         refresh()
     }
 
+    fun setPrices(perMillionIn: Double, perMillionOut: Double) {
+        prefs.edit()
+            .putFloat(KEY_PRICE_IN, perMillionIn.coerceAtLeast(0.0).toFloat())
+            .putFloat(KEY_PRICE_OUT, perMillionOut.coerceAtLeast(0.0).toFloat())
+            .apply()
+        refresh()
+    }
+
+    /** Adds one call's token usage to the lifetime tally. Balance is never queried. */
+    fun recordUsage(promptTokens: Int, completionTokens: Int) {
+        prefs.edit()
+            .putLong(KEY_PROMPT_TOKENS, prefs.getLong(KEY_PROMPT_TOKENS, 0L) + promptTokens)
+            .putLong(KEY_COMPLETION_TOKENS, prefs.getLong(KEY_COMPLETION_TOKENS, 0L) + completionTokens)
+            .apply()
+        refresh()
+    }
+
     fun readKey(): String? = keyStore.read(KEY_SLOT)
 
     /** Records one call against today's budget. */
@@ -134,5 +171,9 @@ class AiSettings @Inject constructor(
         const val KEY_LIMIT = "dailyLimit"
         const val KEY_USAGE_DAY = "usageDay"
         const val KEY_USAGE_COUNT = "usageCount"
+        const val KEY_PROMPT_TOKENS = "promptTokens"
+        const val KEY_COMPLETION_TOKENS = "completionTokens"
+        const val KEY_PRICE_IN = "priceIn"
+        const val KEY_PRICE_OUT = "priceOut"
     }
 }

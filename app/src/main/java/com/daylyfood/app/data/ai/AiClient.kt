@@ -24,6 +24,7 @@ class AiClient @Inject constructor(
             url = config.endpointUrl,
             apiKey = key,
             body = textBody(config.modelName, "你是连通性测试助手。只回复两个字：可用", "测试一下", maxTokens = 32),
+            model = config.modelName,
         )
     }
 
@@ -32,6 +33,7 @@ class AiClient @Inject constructor(
             url = config.endpointUrl,
             apiKey = key,
             body = textBody(config.modelName, system, user, maxTokens = 800),
+            model = config.modelName,
         )
     }
 
@@ -41,6 +43,7 @@ class AiClient @Inject constructor(
                 url = config.endpointUrl,
                 apiKey = key,
                 body = visionBody(config.modelName, system, prompt, jpegBase64),
+                model = config.modelName,
             )
         }
 
@@ -103,7 +106,13 @@ class AiClient @Inject constructor(
         .put("max_tokens", 1000)
         .toString()
 
-    private fun post(url: String, apiKey: String, body: String): String {
+    private fun post(
+        url: String,
+        apiKey: String,
+        body: String,
+        model: String,
+        redirectsLeft: Int = 1,
+    ): String {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 20_000
@@ -116,34 +125,61 @@ class AiClient @Inject constructor(
         try {
             connection.outputStream.use { it.write(body.toByteArray()) }
             val code = connection.responseCode
+
+            // Plain-http endpoints answer with a redirect; POST redirects are not followed
+            // automatically, so chase one ourselves.
+            if (code in 300..399 && redirectsLeft > 0) {
+                val location = connection.getHeaderField("Location")
+                if (location != null) return post(location, apiKey, body, model, redirectsLeft - 1)
+            }
+
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            if (code !in 200..299) error(describe(code, text))
+            if (code !in 200..299) error(describe(code, url, model, text))
 
-            val content = JSONObject(text)
+            val json = JSONObject(text)
+            val content = json
                 .optJSONArray("choices")
                 ?.optJSONObject(0)
                 ?.optJSONObject("message")
                 ?.optString("content")
                 .orEmpty()
             if (content.isBlank()) error("模型没有返回内容")
+
+            // Spend is recorded from the server's own usage block; balance is never queried.
+            json.optJSONObject("usage")?.let { usage ->
+                settings.recordUsage(
+                    promptTokens = usage.optInt("prompt_tokens", 0),
+                    completionTokens = usage.optInt("completion_tokens", 0),
+                )
+            }
             return content
         } finally {
             connection.disconnect()
         }
     }
 
-    private fun describe(code: Int, body: String): String {
+    private fun describe(code: Int, url: String, model: String, body: String): String {
         val detail = runCatching {
             JSONObject(body).optJSONObject("error")?.optString("message")
+                ?: JSONObject(body).optString("message").takeIf { it.isNotBlank() }
         }.getOrNull()?.takeIf { it.isNotBlank() }
+
         val reason = when (code) {
-            401, 403 -> "Key 无效或没有该模型权限"
-            404 -> "地址或模型名不对"
+            400 -> "请求被拒绝，多是模型名不对"
+            401, 403 -> "Key 无效或没有这个模型的权限"
+            404 -> "地址不对或模型不存在"
+            422 -> "请求参数不被接受"
             429 -> "调用太频繁，稍后再试"
             in 500..599 -> "服务端繁忙"
-            else -> "调用失败 HTTP $code"
+            else -> "调用失败"
         }
-        return if (detail != null) "$reason（$detail）" else reason
+        val target = url.substringAfter("://").substringBefore('?')
+        return buildString {
+            append(reason).append("（HTTP ").append(code).append("）")
+            append("\n地址：").append(target)
+            append("\n模型：").append(model)
+            if (detail != null) append("\n服务器：").append(detail.take(160))
+        }
     }
 }

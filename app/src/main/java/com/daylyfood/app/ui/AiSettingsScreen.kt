@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.daylyfood.app.data.ai.EndpointNormalizer
 
 /**
  * AI settings: the user supplies endpoint, model name and key themselves, then flips the
@@ -57,6 +58,12 @@ fun AiSettingsScreen(
     var model by remember(config.modelName) { mutableStateOf(config.modelName) }
     var key by remember { mutableStateOf("") }
     var reveal by remember { mutableStateOf(false) }
+    var priceIn by remember(config.pricePerMillionIn) {
+        mutableStateOf(config.pricePerMillionIn.takeIf { it > 0 }?.toString() ?: "")
+    }
+    var priceOut by remember(config.pricePerMillionOut) {
+        mutableStateOf(config.pricePerMillionOut.takeIf { it > 0 }?.toString() ?: "")
+    }
     val masked = remember(config.hasKey) { vm.maskedKey() }
 
     Column(
@@ -82,18 +89,32 @@ fun AiSettingsScreen(
                 value = url,
                 onValueChange = { url = it },
                 label = { Text("接口地址") },
-                placeholder = { Text("https://example.com/v1/chat/completions") },
+                placeholder = { Text("只填域名也行，会自动补 /chat/completions") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
+            if (config.endpointUrl.isNotBlank()) {
+                Text(
+                    "实际请求：${EndpointNormalizer.display(config.endpointUrl)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = model,
                 onValueChange = { model = it },
                 label = { Text("模型名") },
-                placeholder = { Text("识图要选支持图片的模型") },
+                placeholder = { Text("照服务商文档抄，识图要选支持图片的") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "例：DeepSeek 是 deepseek-chat / deepseek-reasoner；智谱是 glm-4-flash / glm-4v-flash。" +
+                    "名字以服务商当前文档为准，填错会返回 400 或 404。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
             if (config.hasKey && key.isBlank()) {
@@ -122,8 +143,8 @@ fun AiSettingsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { vm.saveConfig(url, model, key); key = "" }) { Text("保存") }
                 OutlinedButton(
-                    onClick = vm::testConnection,
-                    enabled = config.isConfigured && test != AiSettingsViewModel.TestState.Testing,
+                    onClick = { vm.saveAndTest(url, model, key); key = "" },
+                    enabled = test != AiSettingsViewModel.TestState.Testing,
                 ) { Text(if (test == AiSettingsViewModel.TestState.Testing) "测试中…" else "测试连接") }
             }
             when (val result = test) {
@@ -176,6 +197,53 @@ fun AiSettingsScreen(
         }
 
         SectionCard {
+            Text("花费记录", style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "只看你自己花了多少，不查余额。数字来自每次响应里的 usage 字段。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "累计 ${config.totalTokens} tokens" +
+                    "（输入 ${config.promptTokens} / 输出 ${config.completionTokens}）",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                config.estimatedCost?.let { "估算花费 ¥%.4f".format(it) }
+                    ?: "填下面单价后才能算钱",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (config.estimatedCost != null) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PriceField(
+                    label = "输入单价",
+                    value = priceIn,
+                    onChange = { priceIn = it },
+                    modifier = Modifier.weight(1f),
+                )
+                PriceField(
+                    label = "输出单价",
+                    value = priceOut,
+                    onChange = { priceOut = it },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "单位：元/百万 tokens，照服务商价目表填；填 0 就只记 token 不算钱。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = {
+                vm.setPrices(priceIn.toDoubleOrNull() ?: 0.0, priceOut.toDoubleOrNull() ?: 0.0)
+            }) { Text("保存单价") }
+        }
+
+        SectionCard {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("每日调用上限", style = MaterialTheme.typography.titleSmall)
@@ -203,6 +271,24 @@ fun AiSettingsScreen(
         )
         Spacer(Modifier.height(20.dp))
     }
+}
+
+@Composable
+private fun PriceField(
+    label: String,
+    value: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        placeholder = { Text("元/百万") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        modifier = modifier,
+    )
 }
 
 @Composable

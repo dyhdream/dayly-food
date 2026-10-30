@@ -52,6 +52,15 @@ class AiSettingsViewModel @Inject constructor(
 
     fun setDailyLimit(limit: Int) = settings.setDailyLimit(limit)
 
+    fun setPrices(perMillionIn: Double, perMillionOut: Double) =
+        settings.setPrices(perMillionIn, perMillionOut)
+
+    /** Saves first so a test never runs against stale fields. */
+    fun saveAndTest(url: String, model: String, key: String) {
+        saveConfig(url, model, key)
+        testConnection()
+    }
+
     fun testConnection() = viewModelScope.launch {
         _test.value = TestState.Testing
         _test.value = client.testConnection().fold(
