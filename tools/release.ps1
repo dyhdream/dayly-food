@@ -98,9 +98,19 @@ finally {
 
 Write-Host "[5/6] publish GitHub Release v$Version"
 if ([string]::IsNullOrWhiteSpace($Notes)) { $Notes = "v$Version" }
-gh release delete "v$Version" --yes 2>$null | Out-Null
+
+# Re-running a release must not fail just because the tag does not exist yet.
+$previous = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+gh release view "v$Version" 2>$null | Out-Null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host '      replacing existing release'
+    gh release delete "v$Version" --yes 2>$null | Out-Null
+}
 gh release create "v$Version" $staged --title "v$Version" --notes $Notes --latest
-if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
+$created = $LASTEXITCODE
+$ErrorActionPreference = $previous
+if ($created -ne 0) { throw 'gh release create failed' }
 
 Write-Host '[6/6] done'
 Write-Host "      Installed clients will see v$Version on their next update check."
