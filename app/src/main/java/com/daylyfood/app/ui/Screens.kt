@@ -229,6 +229,8 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
         ) { Text("保存") }
 
+        AiSettingsCard()
+
         SectionCard {
             Text("应用更新", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(6.dp))
