@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +54,7 @@ fun MeScreen(
     val updateState by updateVm.state.collectAsStateWithLifecycle()
     val backupState by backupVm.state.collectAsStateWithLifecycle()
     val ai by meVm.aiConfig.collectAsStateWithLifecycle()
+    val cacheBytes by meVm.cacheBytes.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val exportLauncher = rememberLauncherForActivityResult(
@@ -139,6 +140,26 @@ fun MeScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+        }
+
+        SectionCard {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("存储", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        cacheBytes?.let { "临时文件 ${formatBytes(it)}" } ?: "正在统计…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                OutlinedButton(onClick = { meVm.clearCache() }) { Text("清理") }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "拍照的原图、下载过的更新包会自动清掉；这里只显示还没清的部分。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
 
         SectionCard {
@@ -253,4 +274,10 @@ private fun aiSubtitle(ai: AiConfig): String = when {
     !ai.isConfigured -> "未配置，填了才能拍照认菜"
     ai.visionEnabled -> "已配置 · 识图已开启"
     else -> "已配置 · 识图关着"
+}
+
+private fun formatBytes(bytes: Long): String = when {
+    bytes >= 1024L * 1024L -> "%.1f MB".format(bytes / 1024.0 / 1024.0)
+    bytes >= 1024L -> "%.0f KB".format(bytes / 1024.0)
+    else -> "$bytes B"
 }

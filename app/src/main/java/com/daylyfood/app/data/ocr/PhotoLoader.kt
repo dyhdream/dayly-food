@@ -79,7 +79,10 @@ class PhotoLoader @Inject constructor(
 
         if (degrees == 0f) return bitmap
         val matrix = Matrix().apply { postRotate(degrees) }
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        // The unrotated copy is dead the moment we return; don't wait for the GC to free 20 MB.
+        if (rotated !== bitmap) bitmap.recycle()
+        return rotated
     }
 }
 
@@ -93,5 +96,10 @@ class TempPhotoStore @Inject constructor(
         // One file reused per shot: a stale capture is worthless and we do not want them piling up.
         dir.listFiles()?.forEach { it.delete() }
         return File(dir, "capture.jpg")
+    }
+
+    /** Drops the capture as soon as the scan is over instead of waiting for the next shot. */
+    fun clear() {
+        File(context.cacheDir, "photos").listFiles()?.forEach { it.delete() }
     }
 }

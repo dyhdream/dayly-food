@@ -303,14 +303,16 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                     uri = uri,
                     meal = guessMeal(LocalTime.now().hour),
                     day = LocalDate.now().toEpochDay(),
-                    onDone = { scanUri = null },
+                    onDone = { scanUri = null; photoStore.clear() },
                     onRetake = { scanUri = null; launchCamera() },
                     onManualAdd = {
                         scanUri = null
+                        photoStore.clear()
                         addMeal = guessMeal(LocalTime.now().hour)
                     },
                     onOpenAiSettings = {
                         scanUri = null
+                        photoStore.clear()
                         settingsPage = "ai"
                         tab = 2
                     },

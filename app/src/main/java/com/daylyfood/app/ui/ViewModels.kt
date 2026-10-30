@@ -2,6 +2,7 @@
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.daylyfood.app.data.CacheCleaner
 import com.daylyfood.app.data.SeedImporter
 import com.daylyfood.app.data.db.DiaryDao
 import com.daylyfood.app.data.db.DiaryEntryEntity
