@@ -1,4 +1,4 @@
-package com.daylyfood.app.domain
+﻿package com.daylyfood.app.domain
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -46,6 +46,14 @@ class NutritionLabelChineseUnitsTeaTest {
         assertEquals(0.0, label.carb!!, 0.0001)
         assertEquals(0.0, label.sodiumMg!!, 0.0001)
         assertFalse(label.isSuspicious())
+        // 每100毫升 => the food must be stored and shown in ml, not g
+        assertEquals("ml", label.unit)
+    }
+
+    @Test
+    fun `solid label stays in grams`() {
+        val label = NutritionLabelParser.parse("营养成分表 每100克 能量 400千焦 蛋白质 5克")
+        assertEquals("g", label.unit)
     }
 
     @Test

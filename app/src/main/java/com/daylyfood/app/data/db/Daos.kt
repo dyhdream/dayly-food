@@ -110,7 +110,8 @@ interface DiaryDao {
                MAX(fat * 100.0 / grams) AS fat100,
                MAX(carb * 100.0 / grams) AS carb100,
                MAX(foodId) AS foodId,
-               MAX(createdAt) AS createdAt
+               MAX(createdAt) AS createdAt,
+               MAX(unit) AS unit
         FROM diary_entry
         WHERE grams > 0
         GROUP BY nameSnapshot
@@ -130,6 +131,7 @@ data class RecentFood(
     val carb100: Double,
     val foodId: String?,
     val createdAt: Long,
+    val unit: String = "g",
 )
 
 @Dao

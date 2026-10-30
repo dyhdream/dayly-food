@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -194,6 +194,7 @@ class DishViewModel @Inject constructor(
                 fat = totals.fat,
                 carb = totals.carb,
                 createdAt = stamp,
+                    unit = "g",
             )
         )
         _compose.value = ComposeState()
@@ -219,6 +220,7 @@ class DishViewModel @Inject constructor(
                 fat = food.fat100 * factor,
                 carb = food.carb100 * factor,
                 createdAt = System.currentTimeMillis(),
+                    unit = food.baseUnit,
             )
         )
         onDone()

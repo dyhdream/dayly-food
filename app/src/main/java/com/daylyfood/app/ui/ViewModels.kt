@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -94,6 +94,7 @@ class HomeViewModel @Inject constructor(
                 fat = item.fat100 * factor,
                 carb = item.carb100 * factor,
                 createdAt = System.currentTimeMillis(),
+                    unit = item.unit,
             )
         )
     }
@@ -226,6 +227,7 @@ class SearchViewModel @Inject constructor(
                 fat = fat,
                 carb = carb,
                 createdAt = stamp,
+                    unit = "g",
             )
         )
         _showCustom.value = false
@@ -247,6 +249,7 @@ class SearchViewModel @Inject constructor(
                 fat = food.fat100 * factor,
                 carb = food.carb100 * factor,
                 createdAt = System.currentTimeMillis(),
+                    unit = food.baseUnit,
             )
         )
         dismiss()

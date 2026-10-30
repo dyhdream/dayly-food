@@ -1,5 +1,6 @@
 package com.daylyfood.app.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -56,6 +57,9 @@ data class DiaryEntryEntity(
     val fat: Double,
     val carb: Double,
     val createdAt: Long,
+    /** "g" or "ml": drinks are measured in millilitres, and the diary has to say so. */
+    // defaultValue must match MIGRATION_1_2's ALTER, or Room rejects the migrated schema.
+    @ColumnInfo(defaultValue = "g") val unit: String = "g",
 )
 
 @Entity(tableName = "user_profile")

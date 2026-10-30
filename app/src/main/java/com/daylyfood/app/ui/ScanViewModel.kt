@@ -172,6 +172,7 @@ class ScanViewModel @Inject constructor(
                     fat = item.fat100 * item.grams / 100.0,
                     carb = item.carb100 * item.grams / 100.0,
                     createdAt = stamp + index,
+                    unit = item.unit,
                 ),
             )
         }
@@ -191,7 +192,7 @@ class ScanViewModel @Inject constructor(
                     basis = "COOKED",
                     category = "AI识别",
                     brand = null,
-                    baseUnit = "g",
+                    baseUnit = item.unit,
                     kcal100 = item.kcal100,
                     protein100 = item.protein100,
                     fat100 = item.fat100,
@@ -224,6 +225,7 @@ class ScanViewModel @Inject constructor(
             fat = fat100 * grams / 100.0,
             carb = carb100 * grams / 100.0,
             createdAt = stamp,
+            unit = baseUnit,
         )
 
     private fun Bitmap.toJpegBase64(quality: Int = 85): String {

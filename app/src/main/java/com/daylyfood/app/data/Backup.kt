@@ -97,7 +97,8 @@ object Backup {
                         .put("protein", entry.protein)
                         .put("fat", entry.fat)
                         .put("carb", entry.carb)
-                        .put("createdAt", entry.createdAt),
+                        .put("createdAt", entry.createdAt)
+                        .put("unit", entry.unit),
                 )
             }
         })
@@ -170,6 +171,8 @@ object Backup {
                 fat = it.optDouble("fat", 0.0),
                 carb = it.optDouble("carb", 0.0),
                 createdAt = it.optLong("createdAt", 0L),
+                // Older backups have no unit; everything was grams back then.
+                unit = it.optString("unit").ifBlank { "g" },
             )
         }
 

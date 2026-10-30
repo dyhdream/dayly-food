@@ -25,7 +25,7 @@ object LabelFoodFactory {
             basis = "AS_SOLD",
             category = "扫标签",
             brand = null,
-            baseUnit = "g",
+            baseUnit = per100.unit,
             kcal100 = per100.kcal ?: 0.0,
             protein100 = per100.protein ?: 0.0,
             fat100 = per100.fat ?: 0.0,
@@ -40,13 +40,16 @@ object LabelFoodFactory {
         )
     }
 
-    fun defaultServing(foodId: String, label: NutritionLabelParser.Label): ServingEntity =
-        ServingEntity(
+    fun defaultServing(foodId: String, label: NutritionLabelParser.Label): ServingEntity {
+        val unit = label.unit
+        val amount = label.servingGrams ?: 100.0
+        return ServingEntity(
             id = "S$foodId",
             foodId = foodId,
-            label = label.servingGrams?.let { "每份（${it.toInt()}g）" } ?: "100 克",
-            grams = label.servingGrams ?: 100.0,
+            label = if (label.servingGrams != null) "每份（${amount.toInt()}$unit）" else "100 $unit",
+            grams = amount,
             isDefault = true,
             sort = 1,
         )
+    }
 }

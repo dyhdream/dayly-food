@@ -18,6 +18,8 @@ data class RecognizedFood(
     val carb100: Double,
     val source: String,
     val foodId: String? = null,
+    /** "g" for dishes, "ml" when the library entry is a drink. */
+    val unit: String = "g",
 ) {
     val isFromLibrary: Boolean get() = source == FROM_LIBRARY
 
@@ -53,6 +55,7 @@ object RecognizedFoodResolver {
                 carb100 = library.carb100,
                 source = RecognizedFood.FROM_LIBRARY,
                 foodId = library.id,
+                unit = library.baseUnit,
             )
         } else {
             val kcal = item.kcalPer100?.coerceIn(0.0, MAX_KCAL_PER_100) ?: return@mapNotNull null

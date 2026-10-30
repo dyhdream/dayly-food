@@ -325,7 +325,7 @@ fun HomeScreen(
                     recent.forEach { item ->
                         AssistChip(
                             onClick = { vm.quickAdd(item, mealForNow()) },
-                            label = { Text("${item.name} ${item.grams.roundToInt()}g") },
+                            label = { Text("${item.name} ${item.grams.roundToInt()}${item.unit}") },
                         )
                     }
                 }
@@ -406,7 +406,7 @@ private fun EntryRow(
         Column(Modifier.weight(1f)) {
             Text(entry.nameSnapshot, style = MaterialTheme.typography.bodyMedium)
             Text(
-                "${entry.grams.roundToInt()}g · 蛋白 ${entry.protein.roundToInt()}g " +
+                "${entry.grams.roundToInt()}${entry.unit} · 蛋白 ${entry.protein.roundToInt()}g " +
                     "脂肪 ${entry.fat.roundToInt()}g 碳水 ${entry.carb.roundToInt()}g",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -573,7 +573,7 @@ private fun EditGramsDialog(
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("克数") },
+                    label = { Text("份量（${entry.unit}）") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                 )
@@ -694,14 +694,14 @@ private fun ServingDialog(
                                 picked = serving.id
                                 grams = serving.grams.roundToInt().toString()
                             },
-                            label = { Text("${serving.label} ${serving.grams.roundToInt()}g") },
+                            label = { Text("${serving.label} ${serving.grams.roundToInt()}${food.baseUnit}") },
                         )
                     }
                 }
                 OutlinedTextField(
                     value = grams,
                     onValueChange = { grams = it; picked = null },
-                    label = { Text("克数") },
+                    label = { Text("份量（${food.baseUnit}）") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                 )

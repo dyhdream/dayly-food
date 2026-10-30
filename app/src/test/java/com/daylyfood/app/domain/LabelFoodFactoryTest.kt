@@ -31,6 +31,16 @@ class LabelFoodFactoryTest {
     }
 
     @Test
+    fun `drink labels are stored in millilitres`() {
+        val drink = NutritionLabelParser.parse("营养成分表 每100毫升 能量 180千焦 碳水化合物 10克").per100()
+        assertEquals("ml", drink.unit)
+
+        val food = LabelFoodFactory.toFood("L3", "某品牌 果汁", drink)
+        assertEquals("ml", food.baseUnit)
+        assertEquals("100 ml", LabelFoodFactory.defaultServing("L3", drink).label)
+    }
+
+    @Test
     fun `default serving is 100g when the label has no per-serving basis`() {
         val serving = LabelFoodFactory.defaultServing("L1", label)
         assertEquals(100.0, serving.grams, 0.001)

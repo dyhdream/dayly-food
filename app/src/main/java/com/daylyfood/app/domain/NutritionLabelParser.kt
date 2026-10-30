@@ -24,6 +24,8 @@ object NutritionLabelParser {
         val carb: Double? = null,
         val fiber: Double? = null,
         val sodiumMg: Double? = null,
+        /** "ml" when the table is per 100 millilitres (drinks), else "g". */
+        val unit: String = "g",
     ) {
         /** Energy in kcal, from whichever unit the label used. */
         val kcal: Double?
@@ -47,6 +49,7 @@ object NutritionLabelParser {
                 carb = carb?.times(factor),
                 fiber = fiber?.times(factor),
                 sodiumMg = sodiumMg?.times(factor),
+                unit = unit,
             )
         }
 
@@ -92,6 +95,7 @@ object NutritionLabelParser {
             carb = grab(normalized, CARB_PATTERN),
             fiber = grab(normalized, FIBER_PATTERN),
             sodiumMg = grab(normalized, SODIUM_PATTERN),
+            unit = if (LIQUID_BASIS.containsMatchIn(normalized)) "ml" else "g",
         )
     }
 
@@ -139,6 +143,8 @@ object NutritionLabelParser {
     private const val BASIS_PER_SERVING = "PER_SERVING"
 
     private val PER_100_PATTERN = Regex("每\\s*100\\s*(?:克|g|毫升|ml)", RegexOption.IGNORE_CASE)
+    /** Drinks are labelled per 100 ml; everything else is per 100 g. */
+    private val LIQUID_BASIS = Regex("每\\s*100\\s*(?:毫升|ml)", RegexOption.IGNORE_CASE)
     private val PER_SERVING_PATTERN = Regex(
         "每\\s*份[^0-9]{0,12}([0-9]+(?:\\.[0-9]+)?)\\s*(?:克|g|毫升|ml)",
         RegexOption.IGNORE_CASE,

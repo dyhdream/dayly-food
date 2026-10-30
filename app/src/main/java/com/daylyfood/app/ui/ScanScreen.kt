@@ -165,7 +165,7 @@ private fun LabelConfirmForm(
         Text("营养成分表", style = MaterialTheme.typography.titleSmall)
         Spacer(Modifier.height(6.dp))
         Text(
-            "每100g：${per100.kcal?.roundToInt() ?: "?"} kcal",
+            "每100${label.unit}：${per100.kcal?.roundToInt() ?: "?"} kcal",
             style = MaterialTheme.typography.bodyMedium,
         )
         label.energyKj?.let {
@@ -216,7 +216,7 @@ private fun LabelConfirmForm(
                 value = gramsText,
                 onValueChange = { gramsText = it },
                 label = { Text("吃了多少") },
-                suffix = { Text("g") },
+                suffix = { Text(label.unit) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.width(160.dp),
