@@ -1,6 +1,7 @@
 package com.daylyfood.app.ui
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,15 @@ fun DishesScreen(
     val mine by vm.myDishes.collectAsStateWithLifecycle(emptyList())
     val builtIn by vm.builtInDishes.collectAsStateWithLifecycle(emptyList())
     var pending by remember { mutableStateOf<FoodEntity?>(null) }
+    var query by remember { mutableStateOf("") }
+
+    fun matches(food: FoodEntity): Boolean =
+        query.isBlank() ||
+            food.name.contains(query.trim(), ignoreCase = true) ||
+            food.notes?.contains(query.trim(), ignoreCase = true) == true
+
+    val mineShown = mine.filter(::matches)
+    val builtInShown = builtIn.filter(::matches)
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -76,22 +86,34 @@ fun DishesScreen(
             Text("组合菜品（选食材 + 烹饪方式）")
         }
 
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text("搜索菜品") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         SectionCard {
-            Text("我的菜品 ${mine.size}", style = MaterialTheme.typography.titleMedium)
+            Text("我的菜品 ${mineShown.size}", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
-            if (mine.isEmpty()) {
-                EmptyHint("还没有。点上面的按钮，用食材拼出你常吃的那道菜")
+            if (mineShown.isEmpty()) {
+                EmptyHint(
+                    if (mine.isEmpty()) "还没有。点上面的按钮，用食材拼出你常吃的那道菜"
+                    else "没有匹配的菜品"
+                )
             }
-            mine.forEach { dish ->
+            mineShown.forEach { dish ->
                 DishRow(dish) { pending = dish }
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
             }
         }
 
         SectionCard {
-            Text("内置菜品 ${builtIn.size}", style = MaterialTheme.typography.titleMedium)
+            Text("内置菜品 ${builtInShown.size}", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(4.dp))
-            builtIn.forEach { dish ->
+            if (builtInShown.isEmpty()) EmptyHint("没有匹配的菜品")
+            builtInShown.forEach { dish ->
                 DishRow(dish) { pending = dish }
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
             }
@@ -121,10 +143,9 @@ private fun DishRow(dish: FoodEntity, onClick: () -> Unit) {
     ) {
         Column(Modifier.weight(1f)) {
             Text(dish.name, style = MaterialTheme.typography.bodyMedium)
-            val subtitle = dish.notes?.takeIf { it.isNotBlank() }
-                ?: "每100g ${dish.kcal100.roundToInt()} kcal"
+            // The recipe itself stays out of the list; energy is what you scan for here.
             Text(
-                subtitle,
+                "每100g ${dish.kcal100.roundToInt()} kcal",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -175,15 +196,18 @@ fun MealPickerDialog(
     )
 }
 
-/** Compose a dish from ingredients + a cooking method, then log it. */
+/** Compose a dish from ingredients + a cooking method, then log it into the given slot. */
 @Composable
 fun ComposeDishScreen(
+    meal: String,
+    day: Long,
     onDone: () -> Unit,
     vm: DishViewModel = hiltViewModel(),
 ) {
+    BackHandler(onBack = { vm.cancelCompose(); onDone() })
     val state by vm.compose.collectAsStateWithLifecycle()
     val totals = state.totals
-    var meal by remember { mutableStateOf(vm.suggestedMeal()) }
+    var chosenMeal by remember(meal) { mutableStateOf(meal) }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -318,13 +342,17 @@ fun ComposeDishScreen(
             Spacer(Modifier.height(4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MEAL_LABELS.forEach { (key, label) ->
-                    FilterChip(selected = meal == key, onClick = { meal = key }, label = { Text(label) })
+                    FilterChip(
+                        selected = chosenMeal == key,
+                        onClick = { chosenMeal = key },
+                        label = { Text(label) },
+                    )
                 }
             }
         }
 
         Button(
-            onClick = { vm.saveDish(meal) { onDone() } },
+            onClick = { vm.saveDish(chosenMeal, day) { onDone() } },
             enabled = state.items.isNotEmpty() && totals.grams > 0,
             modifier = Modifier.fillMaxWidth(),
         ) { Text("保存为我的菜品并记录") }

@@ -174,6 +174,7 @@ class SearchViewModel @Inject constructor(
         fat: Double,
         carb: Double,
         meal: String,
+        epochDay: Long,
         onDone: () -> Unit,
     ) = viewModelScope.launch {
         if (name.isBlank() || grams <= 0 || kcal < 0) return@launch
@@ -215,7 +216,7 @@ class SearchViewModel @Inject constructor(
         )
         diaryDao.insert(
             DiaryEntryEntity(
-                epochDay = LocalDate.now().toEpochDay(),
+                epochDay = epochDay,
                 meal = meal,
                 foodId = foodId,
                 nameSnapshot = food.name,
@@ -231,12 +232,12 @@ class SearchViewModel @Inject constructor(
         onDone()
     }
 
-    fun record(meal: String, grams: Double, onDone: () -> Unit) = viewModelScope.launch {
+    fun record(meal: String, grams: Double, epochDay: Long, onDone: () -> Unit) = viewModelScope.launch {
         val food = _selected.value ?: return@launch
         val factor = grams / 100.0
         diaryDao.insert(
             DiaryEntryEntity(
-                epochDay = LocalDate.now().toEpochDay(),
+                epochDay = epochDay,
                 meal = meal,
                 foodId = food.id,
                 nameSnapshot = food.name,

@@ -127,7 +127,7 @@ class DishViewModel @Inject constructor(
     }
 
     /** Saves the composed dish as a food the user can find and reuse, then logs it. */
-    fun saveDish(meal: String, onDone: () -> Unit) = viewModelScope.launch {
+    fun saveDish(meal: String, epochDay: Long, onDone: () -> Unit) = viewModelScope.launch {
         val state = _compose.value
         if (state.items.isEmpty()) return@launch
         val totals = state.totals
@@ -180,7 +180,7 @@ class DishViewModel @Inject constructor(
         )
         diaryDao.insert(
             DiaryEntryEntity(
-                epochDay = LocalDate.now().toEpochDay(),
+                epochDay = epochDay,
                 meal = meal,
                 foodId = foodId,
                 nameSnapshot = name,

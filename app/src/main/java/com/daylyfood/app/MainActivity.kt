@@ -2,6 +2,7 @@ package com.daylyfood.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
@@ -27,12 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.daylyfood.app.domain.guessMeal
 import com.daylyfood.app.ui.ComposeDishScreen
 import com.daylyfood.app.ui.DishesScreen
 import com.daylyfood.app.ui.HomeScreen
@@ -44,6 +47,8 @@ import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import java.time.LocalDate
+import java.time.LocalTime
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -80,8 +85,18 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     }
 
     var tab by remember { mutableIntStateOf(0) }
-    var searchMeal by remember { mutableStateOf<String?>(null) }
+    var addMeal by remember { mutableStateOf<String?>(null) }
+    var addDay by remember { mutableLongStateOf(LocalDate.now().toEpochDay()) }
     var composing by remember { mutableStateOf(false) }
+
+    // Back leaves the current surface (compose -> search -> tab), and only then the app.
+    BackHandler(enabled = composing || addMeal != null || tab != 0) {
+        when {
+            composing -> composing = false
+            addMeal != null -> addMeal = null
+            else -> tab = 0
+        }
+    }
 
     when {
         // First run: the profile is the whole screen, no tabs.
@@ -91,12 +106,24 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             onCancel = null,
         )
 
-        searchMeal != null -> SearchScreen(
-            meal = searchMeal!!,
-            onDone = { searchMeal = null },
+        addMeal != null && composing -> ComposeDishScreen(
+            meal = addMeal!!,
+            day = addDay,
+            onDone = { composing = false; addMeal = null },
         )
 
-        composing -> ComposeDishScreen(onDone = { composing = false })
+        addMeal != null -> SearchScreen(
+            meal = addMeal!!,
+            day = addDay,
+            onCompose = { composing = true },
+            onDone = { addMeal = null },
+        )
+
+        composing -> ComposeDishScreen(
+            meal = guessMeal(LocalTime.now().hour),
+            day = LocalDate.now().toEpochDay(),
+            onDone = { composing = false; tab = 1 },
+        )
 
         else -> Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -128,7 +155,10 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                 Crossfade(targetState = tab, animationSpec = tween(220), label = "tab") { current ->
                     when (current) {
                         0 -> HomeScreen(
-                            onAdd = { meal -> searchMeal = meal },
+                            onAdd = { meal, day ->
+                                addMeal = meal
+                                addDay = day
+                            },
                             onProfile = { tab = 2 },
                         )
 

@@ -1,6 +1,7 @@
 package com.daylyfood.app.ui
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -288,7 +289,7 @@ private fun ResultRow(label: String, value: String) {
 
 @Composable
 fun HomeScreen(
-    onAdd: (String) -> Unit,
+    onAdd: (String, Long) -> Unit,
     onProfile: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
 ) {
@@ -430,7 +431,7 @@ fun HomeScreen(
                     )
                 }
                 Spacer(Modifier.height(6.dp))
-                OutlinedButton(onClick = { onAdd(key) }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { onAdd(key, day) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("添加$label")
@@ -497,9 +498,12 @@ private fun mealForNow(): String = guessMeal(LocalTime.now().hour)
 @Composable
 fun SearchScreen(
     meal: String,
+    day: Long,
+    onCompose: () -> Unit,
     onDone: () -> Unit,
     vm: SearchViewModel = hiltViewModel(),
 ) {
+    BackHandler(onBack = onDone)
     val query by vm.query.collectAsStateWithLifecycle()
     val results by vm.results.collectAsStateWithLifecycle(emptyList())
     val selected by vm.selected.collectAsStateWithLifecycle(null)
@@ -531,10 +535,15 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedButton(onClick = vm::openCustom, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("库里没有？手动添加")
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = vm::openCustom, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("手动添加")
+            }
+            OutlinedButton(onClick = onCompose, modifier = Modifier.weight(1f)) {
+                Text("组合菜品")
+            }
         }
 
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -551,7 +560,7 @@ fun SearchScreen(
         CustomFoodDialog(
             onDismiss = vm::closeCustom,
             onConfirm = { name, label, grams, kcal, protein, fat, carb ->
-                vm.saveCustom(name, label, grams, kcal, protein, fat, carb, meal) { onDone() }
+                vm.saveCustom(name, label, grams, kcal, protein, fat, carb, meal, day) { onDone() }
             },
         )
     }
@@ -562,7 +571,7 @@ fun SearchScreen(
             food = food,
             servings = servings,
             onDismiss = vm::dismiss,
-            onConfirm = { grams -> vm.record(meal, grams) { onDone() } },
+            onConfirm = { grams -> vm.record(meal, grams, day) { onDone() } },
         )
     }
 }
