@@ -21,7 +21,11 @@ import javax.inject.Singleton
 class PhotoLoader @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    suspend fun load(uri: Uri, maxPx: Int = 1600): Result<Bitmap> = withContext(Dispatchers.IO) {
+    /**
+     * 2000 px on the long edge: small print on a label needs the pixels, and an over-large
+     * bitmap is what made OCR drop lines in the first place.
+     */
+    suspend fun load(uri: Uri, maxPx: Int = 2000): Result<Bitmap> = withContext(Dispatchers.IO) {
         runCatching {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             // decodeStream returns null on purpose here: it only fills `bounds`.

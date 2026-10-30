@@ -148,12 +148,14 @@ object NutritionLabelParser {
         RegexOption.IGNORE_CASE,
     )
     private val NUM = "([0-9]+(?:\\.[0-9]+)?)"
-    private val PROTEIN_PATTERN = Regex("蛋白质[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    // Windows are deliberately wide ({0,16}): OCR often splits a row into several pieces and we
+    // would rather read the right number late than miss the field entirely.
+    private val PROTEIN_PATTERN = Regex("蛋白质[^0-9]{0,16}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
     // 「饱和脂肪」「反式脂肪」 sit above 脂肪 in the table and must not win the match.
-    private val FAT_PATTERN = Regex("(?<!饱和)(?<!反式)脂肪[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
-    private val CARB_PATTERN = Regex("碳水化合物[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
-    private val FIBER_PATTERN = Regex("膳食纤维[^0-9]{0,12}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
-    private val SODIUM_PATTERN = Regex("钠[^0-9]{0,12}$NUM\\s*(?:mg|毫克)", RegexOption.IGNORE_CASE)
+    private val FAT_PATTERN = Regex("(?<!饱和)(?<!反式)脂肪[^0-9]{0,16}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val CARB_PATTERN = Regex("碳水化合物[^0-9]{0,16}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val FIBER_PATTERN = Regex("膳食纤维[^0-9]{0,16}$NUM\\s*(?:g|克)", RegexOption.IGNORE_CASE)
+    private val SODIUM_PATTERN = Regex("钠[^0-9]{0,16}$NUM\\s*(?:mg|毫克)", RegexOption.IGNORE_CASE)
 
     /** Everything from here on is the table; before it is marketing copy. */
     private val TABLE_HEADER = Regex("(营养成分表|营养成份表|营养成分)")

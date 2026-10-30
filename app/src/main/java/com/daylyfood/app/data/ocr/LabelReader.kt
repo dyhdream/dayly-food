@@ -3,6 +3,7 @@ package com.daylyfood.app.data.ocr
 import android.graphics.Bitmap
 import com.daylyfood.app.domain.NutritionLabelParser
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
@@ -43,11 +44,28 @@ class LabelReader @Inject constructor() {
         return try {
             suspendCancellableCoroutine { continuation ->
                 recognizer.process(InputImage.fromBitmap(bitmap, 0))
-                    .addOnSuccessListener { result -> continuation.resume(result.text) }
+                    .addOnSuccessListener { result -> continuation.resume(result.maximalText()) }
                     .addOnFailureListener { error -> continuation.resumeWithException(error) }
             }
         } finally {
             recognizer.close()
+        }
+    }
+
+    /**
+     * Recall over polish: `result.text` joins blocks, but on dense tables it can drop lines that
+     * are still present per-line, so anything not already covered gets appended. Duplicates are
+     * harmless because the parser only looks for specific field names.
+     */
+    private fun Text.maximalText(): String = buildString {
+        append(text)
+        for (block in textBlocks) {
+            for (line in block.lines) {
+                val value = line.text
+                if (value.isNotBlank() && !contains(value)) {
+                    append('\n').append(value)
+                }
+            }
         }
     }
 }
