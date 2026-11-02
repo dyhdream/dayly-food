@@ -67,6 +67,17 @@ fun VoiceHoldButton(
     var level by remember { mutableStateOf(0f) }
     var recognizer by remember { mutableStateOf<SpeechRecognizer?>(null) }
 
+    // Without this the recogniser answers ERROR_CLIENT and the user only sees "识别被中断".
+    val permission = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (!granted) error = "没有麦克风权限，按住时请选「允许」"
+    }
+    fun hasMic(): Boolean = androidx.core.content.ContextCompat.checkSelfPermission(
+        context,
+        android.Manifest.permission.RECORD_AUDIO,
+    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
     fun teardown() {
         val current = recognizer
         recognizer = null
@@ -78,6 +89,12 @@ fun VoiceHoldButton(
         heard = ""
         level = 0f
         pressed = true
+        if (!hasMic()) {
+            pressed = false
+            error = null
+            permission.launch(android.Manifest.permission.RECORD_AUDIO)
+            return
+        }
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             error = "这台设备没有语音识别，用文字搜索吧"
             return
@@ -137,6 +154,14 @@ fun VoiceHoldButton(
         listening = false
         finishing = true
         runCatching { recognizer?.stopListening() }
+    }
+
+    // Errors are a nudge, not a permanent label: clear them so the next attempt starts clean.
+    LaunchedEffect(error) {
+        if (error != null) {
+            kotlinx.coroutines.delay(4_000)
+            error = null
+        }
     }
 
     LaunchedEffect(listening, finishing, level, heard, error) {
@@ -203,7 +228,7 @@ fun Waveform(level: Float, active: Boolean) {
 
 private fun describeVoiceError(code: Int): String = when (code) {
     SpeechRecognizer.ERROR_AUDIO -> "录音出错"
-    SpeechRecognizer.ERROR_CLIENT -> "识别被中断"
+    SpeechRecognizer.ERROR_CLIENT -> "识别被中断，请再按住说一次"
     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "没有麦克风权限"
     SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "识别需要网络"
     SpeechRecognizer.ERROR_NO_MATCH -> "没听清，再说一次"
