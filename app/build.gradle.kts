@@ -20,8 +20,8 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1105
-        versionName = "0.11.5"
+        versionCode = 1200
+        versionName = "0.12.0"
 
         // The OCR engine ships ~10 MB of native code per ABI and real phones here are all ARM.
         ndk {
@@ -88,6 +88,8 @@ dependencies {
     // and no API key, which is the whole point of keeping label scanning free.
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    // Offline Chinese ASR: sherpa-onnx Android wrapper (Apache-2.0).
+    implementation("com.bihe0832.android:lib-sherpa-onnx:6.25.21")
     // Our own viewfinder so the album pick can live inside the camera screen instead of a second button.
     implementation("androidx.camera:camera-core:1.4.1")
     implementation("androidx.camera:camera-camera2:1.4.1")
@@ -106,6 +108,7 @@ val syncSeedAssets = tasks.register<Copy>("syncSeedAssets") {
 }
 
 tasks.named("preBuild") { dependsOn(syncSeedAssets) }
+
 
 
 
