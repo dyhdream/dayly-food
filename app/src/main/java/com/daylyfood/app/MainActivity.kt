@@ -1,5 +1,9 @@
 ﻿package com.daylyfood.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.daylyfood.app.ui.VoiceListenDialog
 import android.content.Intent
 import android.net.Uri
 import android.speech.RecognizerIntent
@@ -154,28 +158,23 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
         if (uri != null) scanUri = uri
     }
 
-    // Voice logging: the system recognizer does the listening, we only match its text to foods.
+    // Voice logging records in our own dialog: launching the system recognizer would show the
+    // provider's branded screen (Google's, on phones that ship it) instead of our wording.
     val voiceVm: VoiceLogViewModel = hiltViewModel()
     val voiceState by voiceVm.state.collectAsStateWithLifecycle()
-    val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-        if (spoken.isNullOrBlank()) {
-            Toast.makeText(context, "没听清，再说一次", Toast.LENGTH_SHORT).show()
+    var voiceListening by remember { mutableStateOf(false) }
+    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            voiceListening = true
         } else {
-            voiceVm.resolve(spoken)
+            Toast.makeText(context, "没有麦克风权限，只能用搜索", Toast.LENGTH_LONG).show()
         }
     }
 
     fun listen() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "说出这餐吃了什么")
-        }
-        runCatching { voiceLauncher.launch(intent) }.onFailure {
-            Toast.makeText(context, "这台设备没有语音识别，改用搜索", Toast.LENGTH_LONG).show()
-            tab = 1
-        }
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        if (granted) voiceListening = true else micPermission.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     fun launchCamera() {
@@ -365,6 +364,16 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                 )
             }
         }
+    }
+
+    if (voiceListening) {
+        VoiceListenDialog(
+            onResult = { spoken ->
+                voiceListening = false
+                voiceVm.resolve(spoken)
+            },
+            onDismiss = { voiceListening = false },
+        )
     }
 
     VoiceLogDialog(
