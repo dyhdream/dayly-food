@@ -121,8 +121,9 @@ class SherpaAsrEngine(private val context: Context) {
                 val tail = recognizer.getResult(stream).text.ifBlank { text }
                 stream.release()
                 onDone(Result.success(tail))
-            } catch (e: Exception) {
-                onDone(Result.failure(e))
+            } catch (t: Throwable) {
+                // Native failures arrive as Error, not Exception; never let one kill the process.
+                onDone(Result.failure(IllegalStateException(t.message ?: t.javaClass.simpleName)))
             } finally {
                 running.set(false)
             }

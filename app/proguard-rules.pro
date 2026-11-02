@@ -7,3 +7,8 @@
 -keep class com.google.mlkit.** { *; }
 -keep class com.google.android.gms.internal.mlkit_vision_text** { *; }
 -dontwarn com.google.mlkit.**
+
+# sherpa-onnx calls into JNI by exact class and method name; renaming aborts the process.
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+-keepclassmembers class com.k2fsa.sherpa.onnx.** { *; }
+-dontwarn com.k2fsa.sherpa.onnx.**

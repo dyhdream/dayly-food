@@ -147,7 +147,10 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     var addMeal by remember { mutableStateOf<String?>(null) }
     var addDay by remember { mutableLongStateOf(LocalDate.now().toEpochDay()) }
     var composing by remember { mutableStateOf(false) }
-    var scanUri by remember { mutableStateOf<Uri?>(null) }
+    // The system gallery picker can recreate this activity; a plain remember would drop the
+    // picked photo and the user just sees the home screen again.
+    var scanUriText by rememberSaveable { mutableStateOf<String?>(null) }
+    val scanUri = scanUriText?.let { runCatching { Uri.parse(it) }.getOrNull() }
     var settingsPage by remember { mutableStateOf<String?>(null) }
 
     // A capture started from a meal card lands in that meal, not in whatever the clock guesses.
@@ -174,7 +177,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     BackHandler(enabled = composing || scanUri != null || settingsPage != null || addMeal != null || tab != 0) {
         when {
             composing -> composing = false
-            scanUri != null -> scanUri = null
+            scanUri != null -> scanUriText = null
             settingsPage != null -> settingsPage = null
             addMeal != null -> addMeal = null
             else -> tab = 0
@@ -332,15 +335,15 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                     uri = uri,
                     meal = captureMeal ?: guessMeal(LocalTime.now().hour),
                     day = captureDay ?: LocalDate.now().toEpochDay(),
-                    onDone = { scanUri = null; captureMeal = null; captureDay = null; photoStore.clear() },
-                    onRetake = { scanUri = null; startCapture() },
+                    onDone = { scanUriText = null; captureMeal = null; captureDay = null; photoStore.clear() },
+                    onRetake = { scanUriText = null; startCapture() },
                     onManualAdd = {
-                        scanUri = null
+                        scanUriText = null
                         photoStore.clear()
                         addMeal = guessMeal(LocalTime.now().hour)
                     },
                     onOpenAiSettings = {
-                        scanUri = null
+                        scanUriText = null
                         photoStore.clear()
                         settingsPage = "ai"
                         tab = 2
@@ -365,11 +368,11 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             newPhotoFile = { runCatching { photoStore.newFile() }.getOrNull() },
             onCaptured = { uri ->
                 captureOpen = false
-                scanUri = uri
+                scanUriText = uri.toString()
             },
             onPicked = { uri ->
                 captureOpen = false
-                scanUri = uri
+                scanUriText = uri.toString()
             },
             onClose = { captureOpen = false },
         )
