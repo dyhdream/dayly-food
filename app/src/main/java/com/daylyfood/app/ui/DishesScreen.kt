@@ -35,6 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import com.daylyfood.app.data.db.ServingEntity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -154,13 +156,20 @@ fun DishesScreen(
     }
 
     val dish = pending
+    var dishServings by remember(dish?.id) { mutableStateOf<List<ServingEntity>>(emptyList()) }
+    LaunchedEffect(dish?.id) {
+        dishServings = dish?.let { vm.servingsOf(it.id) }.orEmpty()
+    }
     if (dish != null) {
         MealPickerDialog(
             title = dish.name,
             subtitle = "约 ${dish.kcal100.roundToInt()} kcal/100g",
             suggested = vm.suggestedMeal(),
+            servings = dishServings,
+            baseUnit = dish.baseUnit,
             onDismiss = { pending = null },
-            onPick = { meal -> vm.logDish(dish.id, meal) { pending = null } },
+            // Same choice as the add-to-meal screen: meal, spec and grams, all before it is logged.
+            onPick = { meal, grams -> vm.logDish(dish.id, meal, grams) { pending = null } },
         )
     }
 }
@@ -200,10 +209,17 @@ fun MealPickerDialog(
     title: String,
     subtitle: String,
     suggested: String,
+    servings: List<ServingEntity>,
+    baseUnit: String,
     onDismiss: () -> Unit,
-    onPick: (String) -> Unit,
+    onPick: (String, Double) -> Unit,
 ) {
     var meal by remember(title) { mutableStateOf(suggested) }
+    val default = servings.firstOrNull { it.isDefault } ?: servings.firstOrNull()
+    // Servings load after the dialog opens, so re-seed the fields when they arrive.
+    var grams by remember(title, default?.id) { mutableStateOf((default?.grams ?: 100.0).roundToInt().toString()) }
+    var picked by remember(title, default?.id) { mutableStateOf(default?.id) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -224,9 +240,38 @@ fun MealPickerDialog(
                         )
                     }
                 }
+                if (servings.isNotEmpty()) {
+                    Text("份量", style = MaterialTheme.typography.titleSmall)
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        servings.forEach { serving ->
+                            FilterChip(
+                                selected = picked == serving.id,
+                                onClick = {
+                                    picked = serving.id
+                                    grams = serving.grams.roundToInt().toString()
+                                },
+                                label = { Text("${serving.label} ${serving.grams.roundToInt()}$baseUnit") },
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = grams,
+                    onValueChange = { grams = it; picked = null },
+                    label = { Text("份量（$baseUnit）") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                )
             }
         },
-        confirmButton = { TextButton(onClick = { onPick(meal) }) { Text("记录") } },
+        confirmButton = {
+            TextButton(
+                onClick = { onPick(meal, grams.toDoubleOrNull() ?: (default?.grams ?: 100.0)) },
+            ) { Text("记录") }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
 }

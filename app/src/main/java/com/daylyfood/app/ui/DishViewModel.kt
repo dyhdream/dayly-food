@@ -202,11 +202,10 @@ class DishViewModel @Inject constructor(
     }
 
     /** Logs an existing dish (built-in or mine) into a meal using its default serving. */
-    fun logDish(foodId: String, meal: String, onDone: () -> Unit) = viewModelScope.launch {
+    suspend fun servingsOf(foodId: String): List<ServingEntity> = foodDao.servings(foodId)
+
+    fun logDish(foodId: String, meal: String, grams: Double, onDone: () -> Unit) = viewModelScope.launch {
         val food = foodDao.byId(foodId) ?: return@launch
-        val grams = foodDao.servings(foodId).firstOrNull { it.isDefault }?.grams
-            ?: foodDao.servings(foodId).firstOrNull()?.grams
-            ?: 100.0
         val factor = grams / 100.0
         diaryDao.insert(
             DiaryEntryEntity(
