@@ -80,6 +80,10 @@ import com.daylyfood.app.ui.RootViewModel
 import com.daylyfood.app.ui.ScanOverlay
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateDialog
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.daylyfood.app.ui.VoiceUiState
+import com.daylyfood.app.ui.Waveform
+import com.daylyfood.app.ui.VoiceHoldButton
 import com.daylyfood.app.ui.VoiceLogDialog
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
@@ -155,9 +159,9 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     var cameraTarget by remember { mutableStateOf<Uri?>(null) }
 
     var captureOpen by rememberSaveable { mutableStateOf(false) }
-    var quickVoice by remember { mutableStateOf(false) }
     val quickVoiceVm: VoiceLogViewModel = hiltViewModel()
     val quickVoiceState by quickVoiceVm.state.collectAsStateWithLifecycle()
+    var voiceUi by remember { mutableStateOf<VoiceUiState?>(null) }
 
     // Voice logging records in our own dialog: launching the system recognizer would show the
     // provider's branded screen (Google's, on phones that ship it) instead of our wording.
@@ -247,17 +251,47 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             },
         ) { padding ->
             Box(Modifier.padding(padding)) {
+                // Live feedback above the buttons: level meter + words so far, no extra layer.
+                voiceUi?.let { ui ->
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        tonalElevation = 3.dp,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 96.dp, start = 24.dp, end = 24.dp)
+                            .zIndex(3f),
+                    ) {
+                        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                            if (ui.error != null) {
+                                Text(ui.error, style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error)
+                            } else {
+                                Waveform(level = ui.level, active = ui.listening)
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    ui.text.ifBlank {
+                                        if (ui.listening) "按住别松手，说完再松" else "识别中…"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Two big corner buttons: left talks, right shoots. One per corner stays out of the
                 // way of the numbers while still being the first thing you see.
                 if (tab == 0) {
-                    FloatingActionButton(
-                        onClick = { quickVoice = true },
-                        modifier = Modifier.align(Alignment.BottomStart).padding(start = 16.dp, bottom = 16.dp).zIndex(2f),
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ) {
-                        Icon(painterResource(R.drawable.ic_mic), contentDescription = "按住说话记一餐")
-                    }
+                    // The button itself is the push-to-talk key: press = listen, release = done.
+                    VoiceHoldButton(
+                        onResult = { spoken -> voiceUi = null; quickVoiceVm.resolve(spoken) },
+                        onState = { voiceUi = it },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 16.dp, bottom = 16.dp)
+                            .zIndex(2f),
+                    )
                     FloatingActionButton(
                         onClick = {
                             captureMeal = guessMeal(LocalTime.now().hour)
@@ -314,18 +348,6 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                 )
             }
         }
-    }
-
-    if (quickVoice) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { quickVoice = false },
-            title = { Text("按住说话") },
-            text = { HoldToTalkBar(onResult = { spoken -> quickVoice = false; quickVoiceVm.resolve(spoken) }) },
-            confirmButton = {},
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { quickVoice = false }) { Text("取消") }
-            },
-        )
     }
 
     VoiceLogDialog(
