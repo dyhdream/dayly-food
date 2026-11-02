@@ -65,7 +65,22 @@ fun VoiceHoldButton(
     var heard by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var level by remember { mutableStateOf(0f) }
-    var recognizer by remember { mutableStateOf<SpeechRecognizer?>(null) }
+    // Some vendor recognisers answer codes we cannot handle. After one failure the next press
+    // opens the system voice panel instead — uglier, but it is the path that always works.
+    var useSystemPanel by remember { mutableStateOf(false) }
+    val systemPanel = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val spoken = result.data
+            ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+        if (spoken.isNullOrBlank()) {
+            error = "没听清，再说一次"
+        } else {
+            useSystemPanel = false
+            onResult(spoken)
+        }
+    }
 
     // Without this the recogniser answers ERROR_CLIENT and the user only sees "识别被中断".
     val permission = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -78,10 +93,14 @@ fun VoiceHoldButton(
         android.Manifest.permission.RECORD_AUDIO,
     ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-    fun teardown() {
-        val current = recognizer
-        recognizer = null
-        runCatching { current?.destroy() }
+    // Creating and destroying a recogniser on every press is what produced ERROR_CLIENT:
+    // the service connection is torn down before it is ready. One instance, reused.
+    val sharedRecognizer = remember {
+        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+            runCatching { SpeechRecognizer.createSpeechRecognizer(context) }.getOrNull()
+        } else {
+            null
+        }
     }
 
     fun start() {
@@ -89,6 +108,19 @@ fun VoiceHoldButton(
         heard = ""
         level = 0f
         pressed = true
+        if (useSystemPanel) {
+            pressed = false
+            runCatching {
+                systemPanel.launch(
+                    Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN")
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, "说出这餐吃了什么")
+                    },
+                )
+            }.onFailure { error = "这台设备没有可用的语音识别" }
+            return
+        }
         if (!hasMic()) {
             pressed = false
             error = null
@@ -99,7 +131,12 @@ fun VoiceHoldButton(
             error = "这台设备没有语音识别，用文字搜索吧"
             return
         }
-        val created = SpeechRecognizer.createSpeechRecognizer(context)
+        val created = sharedRecognizer
+        if (created == null) {
+            pressed = false
+            error = "这台设备没有语音识别，用文字搜索吧"
+            return
+        }
         created.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) { level = 0.12f }
             override fun onBeginningOfSpeech() {}
@@ -112,8 +149,13 @@ fun VoiceHoldButton(
                 listening = false
                 finishing = false
                 pressed = false
-                error = describeVoiceError(code)
-                teardown()
+                val described = describeVoiceError(code)
+                error = if (code == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                    described
+                } else {
+                    useSystemPanel = true
+                    "$described，下次按住改用系统语音"
+                }
             }
             override fun onPartialResults(partialResults: Bundle?) {
                 partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -125,13 +167,11 @@ fun VoiceHoldButton(
                 listening = false
                 finishing = false
                 pressed = false
-                teardown()
                 val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
                 if (text.isNullOrBlank()) error = "没听清，再按住说一次" else onResult(text)
             }
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
-        recognizer = created
         listening = true
         finishing = false
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -143,8 +183,7 @@ fun VoiceHoldButton(
         runCatching { created.startListening(intent) }.onFailure {
             listening = false
             pressed = false
-            error = "麦克风打不开"
-            teardown()
+            error = "麦克风打不开：${it.message ?: it.javaClass.simpleName}"
         }
     }
 
@@ -153,7 +192,7 @@ fun VoiceHoldButton(
         if (!listening) return
         listening = false
         finishing = true
-        runCatching { recognizer?.stopListening() }
+        runCatching { sharedRecognizer?.stopListening() }
     }
 
     // Errors are a nudge, not a permanent label: clear them so the next attempt starts clean.
@@ -170,7 +209,9 @@ fun VoiceHoldButton(
         )
     }
 
-    DisposableEffect(Unit) { onDispose { teardown() } }
+    DisposableEffect(Unit) {
+        onDispose { runCatching { sharedRecognizer?.destroy() } }
+    }
 
     val scale by animateFloatAsState(if (pressed) 1.12f else 1f, label = "micScale")
     Box(
@@ -236,5 +277,5 @@ private fun describeVoiceError(code: Int): String = when (code) {
     SpeechRecognizer.ERROR_SERVER -> "识别服务出错"
     SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "没听到声音，按住多说一会儿"
     SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED -> "设备不支持中文识别"
-    else -> "识别失败"
+    else -> "识别失败（错误码 $code）"
 }
