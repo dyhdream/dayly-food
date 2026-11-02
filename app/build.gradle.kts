@@ -20,8 +20,8 @@ android {
         applicationId = "com.daylyfood.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 902
-        versionName = "0.9.2"
+        versionCode = 1000
+        versionName = "0.10.0"
 
         // The OCR engine ships ~10 MB of native code per ABI and real phones here are all ARM.
         ndk {
@@ -101,3 +101,4 @@ val syncSeedAssets = tasks.register<Copy>("syncSeedAssets") {
 }
 
 tasks.named("preBuild") { dependsOn(syncSeedAssets) }
+

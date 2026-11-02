@@ -222,7 +222,11 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
         else -> Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
-            floatingActionButton = {
+            // Only the diary tab needs the capture buttons; elsewhere they just cover card actions.
+            floatingActionButton = if (tab != 0) {
+                {}
+            } else {
+                {
                 Column(horizontalAlignment = Alignment.End) {
                     SmallFloatingActionButton(
                         onClick = {
@@ -252,6 +256,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                     ) {
                         Icon(painterResource(R.drawable.ic_camera), contentDescription = "拍照")
                     }
+                }
                 }
             },
             bottomBar = {

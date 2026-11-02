@@ -1,4 +1,4 @@
-# 开发者文档
+﻿# 开发者文档
 
 面向要改代码、跑构建或核对数据的人。普通用户请回 [README](../README.md)。
 
@@ -77,8 +77,42 @@ tools/
 1. release 包只打了 arm 架构，**x86_64 模拟器装不上**。调试时临时去掉 `app/build.gradle.kts` 里的 `abiFilters`，debug 包会带上 x86_64（ML Kit 有对应架构库）
 2. 拍照依赖虚拟摄像头；识别标签时用「相册图标」选图更稳
 
-## 测试与发版
+## 食物库数据更新（与 APK 解耦）
 
+食物库是**数据不是代码**，所以不走应用更新，启动后静默拉取：
+
+```
+启动 → 拉 data/index.json（最多 1 次/天）
+     → dataVersion 比本地新？
+     → 下载 data/data-vN.json → 校验 SHA-256
+     → 逐行校验（热量 0–900、营养素 0–100、枚举、条数上限）
+     → 单事务写入（foods → servings → aliases）+ 记录版本
+     → 任何一步失败：整包丢弃，旧库完好，用户无感
+```
+
+- 宿主是 GitHub 静态文件，走 jsDelivr / raw / ghfast 三个镜像，没有后端
+- 数据包是**全量快照**（约 170 KB），不做增量 diff：写入用 `REPLACE`，重复应用天然幂等
+- 用户自建食物（`CUSTOM`、扫标签的 `L…`）不在包里，不会被覆盖；日记存快照，改食物数值不影响历史
+- 版本号只增不减，远端更旧直接忽略
+- 「我的 → 食物库数据」可看当前版本、手动检查
+
+### 发一批新数据
+
+```bash
+python tools/seed_lint.py                 # 必须 0 error
+python tools/derive_dish.py               # 菜品数值不能漂移
+python tools/check_coverage.py --strict   # P0 无缺口
+python tools/build_data.py --version 2    # 生成 data/data-v2.json + index.json
+git add data tools/seed && git commit -m "data: v2" && git push
+```
+
+`--version` 必须比上一次大，否则已装用户不会更新（客户端比的是版本号）。
+
+### 种子数据只有一份
+
+`app/src/main/assets/seed/` 不再进仓库：构建时由 `syncSeedAssets` 从 `tools/seed/*.csv` 生成到 `build/generated/seedAssets/seed/`。之前两处副本漂移过一次（奶茶杯型没进 APK），所以改成了单一数据源。
+
+## 测试与发版
 - 92 个单元测试（Robolectric）：BMR/TDEE 口径、种子导入与中文搜索、菜品推导、营养标签解析（含中文单位 `克/毫克`、全零标签、配料表噪声）、AI 额度与花费、备份编解码、数据库迁移 SQL
 - 数据改动后跑 `python tools/seed_lint.py`，发布前必须 0 error
 - 发版：

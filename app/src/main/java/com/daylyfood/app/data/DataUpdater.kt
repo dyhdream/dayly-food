@@ -1,6 +1,7 @@
-﻿package com.daylyfood.app.data
+package com.daylyfood.app.data
 
 import android.content.Context
+import android.util.Log
 import androidx.room.withTransaction
 import com.daylyfood.app.BuildConfig
 import com.daylyfood.app.data.db.AppDatabase
@@ -95,6 +96,7 @@ class DataUpdater @Inject constructor(
                 }
             }
         } catch (e: Exception) {
+            Log.w(TAG, "数据更新失败", e)
             State.Failed(describe(e))
         }
     }
@@ -112,12 +114,12 @@ class DataUpdater @Inject constructor(
         _appliedVersion.value = pkg.dataVersion
     }
 
-    private fun fetchIndex(): Index {
+    private suspend fun fetchIndex(): Index = withContext(Dispatchers.IO) {
         var lastError: Exception? = null
         for (base in HOSTS) {
             try {
                 val json = JSONObject(fetchBytes(base + "index.json").decodeToString())
-                return Index(
+                return@withContext Index(
                     dataVersion = json.getInt("dataVersion"),
                     file = json.getString("file"),
                     sha256 = json.getString("sha256"),
@@ -131,7 +133,7 @@ class DataUpdater @Inject constructor(
         throw lastError ?: IOException("数据源不可用")
     }
 
-    private fun fetchBytes(url: String): ByteArray {
+    private suspend fun fetchBytes(url: String): ByteArray = withContext(Dispatchers.IO) {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 8_000
             readTimeout = 15_000
@@ -140,7 +142,7 @@ class DataUpdater @Inject constructor(
         }
         try {
             if (connection.responseCode !in 200..299) throw IOException("HTTP ${connection.responseCode}")
-            return connection.inputStream.use { it.readBytes() }
+            connection.inputStream.use { it.readBytes() }
         } finally {
             connection.disconnect()
         }
@@ -152,7 +154,7 @@ class DataUpdater @Inject constructor(
     private fun describe(error: Exception): String = when (error) {
         is java.net.UnknownHostException -> "网络不可用"
         is java.net.SocketTimeoutException -> "连接超时"
-        else -> error.message?.take(60) ?: "数据更新失败"
+        else -> error.message?.take(60)?.ifBlank { null } ?: error.javaClass.simpleName
     }
 
     private data class Index(
@@ -166,6 +168,7 @@ class DataUpdater @Inject constructor(
     }
 
     private companion object {
+        const val TAG = "DataUpdater"
         const val KEY_LAST_CHECK = "lastCheckAt"
         const val CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000L
 
