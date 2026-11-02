@@ -50,8 +50,17 @@ interface FoodDao {
     @Query("SELECT * FROM food_serving WHERE foodId = :foodId ORDER BY sort")
     suspend fun servings(foodId: String): List<ServingEntity>
 
+    @Query("SELECT * FROM food_alias")
+    suspend fun allAliases(): List<AliasEntity>
+
     @Query("SELECT COUNT(*) FROM food_item")
     suspend fun count(): Int
+
+    @Query("SELECT MAX(CAST(SUBSTR(id, 2) AS INTEGER)) FROM food_item WHERE id LIKE 'F%'")
+    suspend fun maxFoodNumber(): Int?
+
+    @Query("SELECT MAX(CAST(SUBSTR(id, 2) AS INTEGER)) FROM food_serving WHERE id LIKE 'S%'")
+    suspend fun maxServingNumber(): Int?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFoods(items: List<FoodEntity>)

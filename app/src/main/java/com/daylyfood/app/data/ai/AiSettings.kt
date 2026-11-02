@@ -1,4 +1,4 @@
-package com.daylyfood.app.data.ai
+﻿package com.daylyfood.app.data.ai
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,6 +21,8 @@ data class AiConfig(
     val summaryEnabled: Boolean = false,
     /** Weekly report: off by default, same reason with more force. */
     val weeklyEnabled: Boolean = false,
+    /** Web search for missing dishes: billed per request, so it is opt-in. */
+    val webSearch: Boolean = false,
     val dailyCallLimit: Int = 20,
     val hasKey: Boolean = false,
     val usedToday: Int = 0,
@@ -78,6 +80,7 @@ class AiSettings @Inject constructor(
             visionEnabled = prefs.getBoolean(KEY_VISION, false),
             summaryEnabled = prefs.getBoolean(KEY_SUMMARY, false),
             weeklyEnabled = prefs.getBoolean(KEY_WEEKLY, false),
+            webSearch = prefs.getBoolean(KEY_WEB_SEARCH, false),
             dailyCallLimit = prefs.getInt(KEY_LIMIT, 20),
             hasKey = keyStore.has(KEY_SLOT),
             usedToday = used,
@@ -116,6 +119,11 @@ class AiSettings @Inject constructor(
 
     fun setSummaryEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_SUMMARY, enabled).apply()
+        refresh()
+    }
+
+    fun setWebSearch(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_WEB_SEARCH, enabled).apply()
         refresh()
     }
 
@@ -168,6 +176,7 @@ class AiSettings @Inject constructor(
         const val KEY_VISION = "vision"
         const val KEY_SUMMARY = "summary"
         const val KEY_WEEKLY = "weekly"
+        const val KEY_WEB_SEARCH = "webSearch"
         const val KEY_LIMIT = "dailyLimit"
         const val KEY_USAGE_DAY = "usageDay"
         const val KEY_USAGE_COUNT = "usageCount"

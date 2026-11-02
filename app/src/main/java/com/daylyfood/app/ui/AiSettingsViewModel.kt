@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,6 +49,7 @@ class AiSettingsViewModel @Inject constructor(
     fun setSummary(enabled: Boolean) = settings.setSummaryEnabled(enabled)
 
     fun setWeekly(enabled: Boolean) = settings.setWeeklyEnabled(enabled)
+    fun setWebSearch(enabled: Boolean) = settings.setWebSearch(enabled)
 
     fun setDailyLimit(limit: Int) = settings.setDailyLimit(limit)
 

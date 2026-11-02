@@ -47,6 +47,34 @@ class AiClient @Inject constructor(
             )
         }
 
+    /**
+     * Web search through the provider's tool API (DeepSeek: POST /v1/tools/search).
+     *
+     * Returns page text so the model can extract a recipe instead of recalling one. Billed per
+     * successful request rather than per token, so it needs its own opt-in switch.
+     */
+    suspend fun searchWeb(query: String, count: Int = 3): Result<List<WebRef>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val config = settings.config.value
+                if (!config.webSearch) error("没有打开联网查菜谱")
+                val url = WebSearch.searchUrl(config.endpointUrl)
+                    ?: error("当前接口不支持联网搜索")
+                if (!CallBudget.canCall(config.usedToday, config.dailyCallLimit)) {
+                    error("今日调用次数已用完，明天再试或调高上限")
+                }
+                val key = settings.readKey() ?: error("还没有填写 API Key")
+                val body = JSONObject()
+                    .put("query", query)
+                    .put("count", count)
+                    .put("need_content", true)
+                    .toString()
+                val refs = WebSearch.parse(postRaw(url, key, body, config.modelName), count)
+                settings.recordCall()
+                refs
+            }
+        }
+
     private suspend fun runCall(block: (AiConfig, String) -> String): Result<String> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -111,7 +139,7 @@ class AiClient @Inject constructor(
         .put("stream", false)
         .toString()
 
-    private fun post(
+    private fun postRaw(
         url: String,
         apiKey: String,
         body: String,
@@ -135,33 +163,38 @@ class AiClient @Inject constructor(
             // automatically, so chase one ourselves.
             if (code in 300..399 && redirectsLeft > 0) {
                 val location = connection.getHeaderField("Location")
-                if (location != null) return post(location, apiKey, body, model, redirectsLeft - 1)
+                if (location != null) return postRaw(location, apiKey, body, model, redirectsLeft - 1)
             }
 
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             if (code !in 200..299) error(describe(code, url, model, text))
 
-            val json = JSONObject(text)
-            val content = json
-                .optJSONArray("choices")
-                ?.optJSONObject(0)
-                ?.optJSONObject("message")
-                ?.optString("content")
-                .orEmpty()
-            if (content.isBlank()) error("模型没有返回内容")
-
-            // Spend is recorded from the server's own usage block; balance is never queried.
-            json.optJSONObject("usage")?.let { usage ->
-                settings.recordUsage(
-                    promptTokens = usage.optInt("prompt_tokens", 0),
-                    completionTokens = usage.optInt("completion_tokens", 0),
-                )
-            }
-            return content
+            return text
         } finally {
             connection.disconnect()
         }
+    }
+
+    /** Chat reply wrapper: unwraps the message and records the server-reported token usage. */
+    private fun post(url: String, apiKey: String, body: String, model: String): String {
+        val json = JSONObject(postRaw(url, apiKey, body, model))
+        val content = json
+            .optJSONArray("choices")
+            ?.optJSONObject(0)
+            ?.optJSONObject("message")
+            ?.optString("content")
+            .orEmpty()
+        if (content.isBlank()) error("模型没有返回内容")
+
+        // Spend is recorded from the server's own usage block; balance is never queried.
+        json.optJSONObject("usage")?.let { usage ->
+            settings.recordUsage(
+                promptTokens = usage.optInt("prompt_tokens", 0),
+                completionTokens = usage.optInt("completion_tokens", 0),
+            )
+        }
+        return content
     }
 
     private fun describe(code: Int, url: String, model: String, body: String): String {

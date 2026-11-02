@@ -1,6 +1,8 @@
 ﻿package com.daylyfood.app
 
+import android.content.Intent
 import android.net.Uri
+import android.speech.RecognizerIntent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -13,7 +15,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -73,6 +77,8 @@ import com.daylyfood.app.ui.RootViewModel
 import com.daylyfood.app.ui.ScanOverlay
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateDialog
+import com.daylyfood.app.ui.VoiceLogDialog
+import com.daylyfood.app.ui.VoiceLogViewModel
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -146,6 +152,30 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scanUri = uri
+    }
+
+    // Voice logging: the system recognizer does the listening, we only match its text to foods.
+    val voiceVm: VoiceLogViewModel = hiltViewModel()
+    val voiceState by voiceVm.state.collectAsStateWithLifecycle()
+    val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (spoken.isNullOrBlank()) {
+            Toast.makeText(context, "没听清，再说一次", Toast.LENGTH_SHORT).show()
+        } else {
+            voiceVm.resolve(spoken)
+        }
+    }
+
+    fun listen() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh-CN")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "说出这餐吃了什么")
+        }
+        runCatching { voiceLauncher.launch(intent) }.onFailure {
+            Toast.makeText(context, "这台设备没有语音识别，改用搜索", Toast.LENGTH_LONG).show()
+            tab = 1
+        }
     }
 
     fun launchCamera() {
@@ -228,16 +258,25 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             } else {
                 {
                 Column(horizontalAlignment = Alignment.End) {
-                    SmallFloatingActionButton(
-                        onClick = {
-                            galleryLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ) {
-                        Icon(painterResource(R.drawable.ic_gallery), contentDescription = "从相册选")
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SmallFloatingActionButton(
+                            onClick = { listen() },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ) {
+                            Icon(painterResource(R.drawable.ic_mic), contentDescription = "语音记餐")
+                        }
+                        SmallFloatingActionButton(
+                            onClick = {
+                                galleryLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ) {
+                            Icon(painterResource(R.drawable.ic_gallery), contentDescription = "从相册选")
+                        }
                     }
                     Spacer(Modifier.height(10.dp))
                     val cameraPress = remember { MutableInteractionSource() }
@@ -327,6 +366,14 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             }
         }
     }
+
+    VoiceLogDialog(
+        state = voiceState,
+        onRemove = voiceVm::remove,
+        onConfirm = { voiceVm.save(LocalDate.now().toEpochDay(), guessMeal(LocalTime.now().hour)) },
+        onSearch = { voiceVm.reset(); tab = 1 },
+        onDismiss = { voiceVm.reset() },
+    )
 
     // Update prompt sits above every screen: important releases must not be missed,
     // optional ones can be postponed for this version only.

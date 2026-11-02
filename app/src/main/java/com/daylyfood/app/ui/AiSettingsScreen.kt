@@ -1,4 +1,4 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -185,6 +185,13 @@ fun AiSettingsScreen(
                 checked = config.summaryEnabled,
                 enabled = true,
                 onChange = vm::setSummary,
+            )
+            ToggleRow(
+                title = "联网查菜谱",
+                subtitle = "库里没有的菜，先搜真实做法再解析；按次计费，搜不到不收费",
+                checked = config.webSearch,
+                enabled = true,
+                onChange = vm::setWebSearch,
             )
             ToggleRow(
                 title = "每周报告",
