@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -60,6 +61,9 @@ fun CaptureScreen(
     onPicked: (Uri) -> Unit,
     onClose: () -> Unit,
 ) {
+    // Back must close the viewfinder, not leave the app.
+    BackHandler(onBack = onClose)
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor: Executor = remember { ContextCompat.getMainExecutor(context) }

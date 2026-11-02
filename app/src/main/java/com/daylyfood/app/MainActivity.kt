@@ -47,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,6 +68,8 @@ import com.daylyfood.app.ui.AiSettingsScreen
 import com.daylyfood.app.ui.CaptureScreen
 import com.daylyfood.app.ui.ComposeDishScreen
 import com.daylyfood.app.ui.DishesScreen
+import com.daylyfood.app.ui.HoldToTalkBar
+import com.daylyfood.app.ui.VoiceLogViewModel
 import com.daylyfood.app.ui.HomeScreen
 import com.daylyfood.app.ui.LoadingScreen
 import com.daylyfood.app.ui.MeScreen
@@ -108,9 +111,14 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     val updateState by updateVm.state.collectAsStateWithLifecycle()
 
     // The one allowed post-start network call: delayed, silent, never on the critical path.
+    // Keeps repeating on a long foreground session, otherwise an app nobody closes never updates.
     LaunchedEffect(Unit) {
-        delay(3_000)
+        delay(1_500)
         updateVm.checkSilently()
+        while (true) {
+            delay(6 * 60 * 60 * 1000L)
+            updateVm.checkSilently()
+        }
     }
 
     // Coming back from the background re-checks too, so a release published while the app
@@ -144,7 +152,10 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     // Filled only when the capture succeeds: the scan screen must never open on an empty file.
     var cameraTarget by remember { mutableStateOf<Uri?>(null) }
 
-    var captureOpen by remember { mutableStateOf(false) }
+    var captureOpen by rememberSaveable { mutableStateOf(false) }
+    var quickVoice by remember { mutableStateOf(false) }
+    val quickVoiceVm: VoiceLogViewModel = hiltViewModel()
+    val quickVoiceState by quickVoiceVm.state.collectAsStateWithLifecycle()
 
     // Voice logging records in our own dialog: launching the system recognizer would show the
     // provider's branded screen (Google's, on phones that ship it) instead of our wording.
@@ -241,6 +252,12 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                                 addMeal = meal
                                 addDay = day
                             },
+                            onVoice = { quickVoice = true },
+                            onCamera = {
+                                captureMeal = guessMeal(LocalTime.now().hour)
+                                captureDay = LocalDate.now().toEpochDay()
+                                startCapture()
+                            },
                         )
 
                         1 -> DishesScreen(onCompose = { composing = true })
@@ -278,6 +295,28 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             }
         }
     }
+
+    if (quickVoice) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { quickVoice = false },
+            title = { Text("按住说话") },
+            text = { HoldToTalkBar(onResult = { spoken -> quickVoice = false; quickVoiceVm.resolve(spoken) }) },
+            confirmButton = {},
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { quickVoice = false }) { Text("取消") }
+            },
+        )
+    }
+
+    VoiceLogDialog(
+        state = quickVoiceState,
+        onRemove = quickVoiceVm::remove,
+        onConfirm = {
+            quickVoiceVm.save(LocalDate.now().toEpochDay(), guessMeal(LocalTime.now().hour))
+        },
+        onSearch = { quickVoiceVm.reset(); tab = 1 },
+        onDismiss = { quickVoiceVm.reset() },
+    )
 
     if (captureOpen) {
         CaptureScreen(
