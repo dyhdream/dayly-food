@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,11 +53,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.BuildConfig
 import com.daylyfood.app.data.db.DiaryEntryEntity
+import com.daylyfood.app.R
 import com.daylyfood.app.data.db.FoodEntity
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.ServingEntity
@@ -450,7 +453,10 @@ fun SearchScreen(
     day: Long,
     onCompose: () -> Unit,
     onDone: () -> Unit,
+    onCapture: () -> Unit,
     vm: SearchViewModel = hiltViewModel(),
+    dishVm: DishRecipeViewModel = hiltViewModel(),
+    voiceVm: VoiceLogViewModel = hiltViewModel(),
 ) {
     BackHandler(onBack = onDone)
     val query by vm.query.collectAsStateWithLifecycle()
@@ -458,6 +464,8 @@ fun SearchScreen(
     val selected by vm.selected.collectAsStateWithLifecycle(null)
     val servings by vm.servings.collectAsStateWithLifecycle(emptyList())
     val showCustom by vm.showCustom.collectAsStateWithLifecycle()
+    val dishState by dishVm.state.collectAsStateWithLifecycle()
+    val voiceState by voiceVm.state.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -475,6 +483,13 @@ fun SearchScreen(
             Spacer(Modifier.weight(1f))
             TextButton(onClick = onDone) { Text("完成") }
         }
+
+        // One capture entry: the viewfinder itself offers the album in its corner, the way chat
+        // apps do it, so the diary no longer needs a second floating button for it.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            QuickAction("拍照 / 相册", R.drawable.ic_camera, onCapture, Modifier.weight(1f))
+        }
+        HoldToTalkBar(onResult = { voiceVm.resolve(it) })
 
         OutlinedTextField(
             value = query,
@@ -498,12 +513,35 @@ fun SearchScreen(
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             if (results.isEmpty()) {
                 EmptyHint("没找到。换个说法，或手动添加")
+                if (query.isNotBlank()) {
+                    // Long-tail dishes are composed on demand; the library ships ingredients only.
+                    OutlinedButton(
+                        onClick = { dishVm.create(query) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("让 AI 整理「$query」的配料") }
+                }
             }
             results.forEach { food ->
                 FoodRow(food) { vm.select(food) }
             }
         }
     }
+
+    VoiceLogDialog(
+        state = voiceState,
+        onRemove = voiceVm::remove,
+        onConfirm = { voiceVm.save(day, meal) },
+        onSearch = { voiceVm.reset() },
+        onDismiss = { voiceVm.reset() },
+    )
+
+    DishRecipeDialog(
+        state = dishState,
+        onConfirmAndRecord = { dishVm.commit(day, meal, record = true) },
+        onConfirmOnly = { dishVm.commit(day, meal, record = false) },
+        onRetry = { dishVm.create(it) },
+        onDismiss = { dishVm.dismiss() },
+    )
 
     if (showCustom) {
         CustomFoodDialog(
@@ -732,4 +770,19 @@ private fun ServingDialog(
         confirmButton = { TextButton(onClick = { onConfirm(gramsV) }) { Text("记录") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     )
+}
+
+/** Compact capture button used inside the add-to-meal screen. */
+@Composable
+private fun QuickAction(
+    label: String,
+    icon: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(onClick = onClick, modifier = modifier, contentPadding = PaddingValues(vertical = 10.dp)) {
+        Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(4.dp))
+        Text(label, maxLines = 1)
+    }
 }

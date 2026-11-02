@@ -88,6 +88,11 @@ dependencies {
     // and no API key, which is the whole point of keeping label scanning free.
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+    // Our own viewfinder so the album pick can live inside the camera screen instead of a second button.
+    implementation("androidx.camera:camera-core:1.4.1")
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

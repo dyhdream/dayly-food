@@ -1,12 +1,7 @@
 ﻿package com.daylyfood.app
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
-import com.daylyfood.app.ui.VoiceListenDialog
 import android.content.Intent
 import android.net.Uri
-import android.speech.RecognizerIntent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -39,13 +34,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,6 +64,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.data.ocr.TempPhotoStore
 import com.daylyfood.app.domain.guessMeal
 import com.daylyfood.app.ui.AiSettingsScreen
+import com.daylyfood.app.ui.CaptureScreen
 import com.daylyfood.app.ui.ComposeDishScreen
 import com.daylyfood.app.ui.DishesScreen
 import com.daylyfood.app.ui.HomeScreen
@@ -82,7 +76,6 @@ import com.daylyfood.app.ui.ScanOverlay
 import com.daylyfood.app.ui.SearchScreen
 import com.daylyfood.app.ui.UpdateDialog
 import com.daylyfood.app.ui.VoiceLogDialog
-import com.daylyfood.app.ui.VoiceLogViewModel
 import com.daylyfood.app.ui.UpdateViewModel
 import com.daylyfood.app.ui.theme.DaylyFoodTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -143,60 +136,21 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
     var scanUri by remember { mutableStateOf<Uri?>(null) }
     var settingsPage by remember { mutableStateOf<String?>(null) }
 
-    // Camera and gallery open straight from the button; there is no intermediate screen.
+    // A capture started from a meal card lands in that meal, not in whatever the clock guesses.
+    var captureMeal by remember { mutableStateOf<String?>(null) }
+    var captureDay by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
     val photoStore = remember { TempPhotoStore(context) }
     // Filled only when the capture succeeds: the scan screen must never open on an empty file.
     var cameraTarget by remember { mutableStateOf<Uri?>(null) }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val target = cameraTarget
-        cameraTarget = null
-        if (ok && target != null) scanUri = target
-    }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scanUri = uri
-    }
+    var captureOpen by remember { mutableStateOf(false) }
 
     // Voice logging records in our own dialog: launching the system recognizer would show the
     // provider's branded screen (Google's, on phones that ship it) instead of our wording.
-    val voiceVm: VoiceLogViewModel = hiltViewModel()
-    val voiceState by voiceVm.state.collectAsStateWithLifecycle()
-    var voiceListening by remember { mutableStateOf(false) }
-    val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            voiceListening = true
-        } else {
-            Toast.makeText(context, "没有麦克风权限，只能用搜索", Toast.LENGTH_LONG).show()
-        }
-    }
 
-    fun listen() {
-        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED
-        if (granted) voiceListening = true else micPermission.launch(Manifest.permission.RECORD_AUDIO)
-    }
-
-    fun launchCamera() {
-        val uri = runCatching {
-            val file = photoStore.newFile()
-            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        }.getOrNull()
-        if (uri == null) {
-            Toast.makeText(context, "创建照片文件失败，改用相册", Toast.LENGTH_LONG).show()
-            galleryLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-            )
-            return
-        }
-        cameraTarget = uri
-        runCatching { cameraLauncher.launch(uri) }.onFailure {
-            cameraTarget = null
-            Toast.makeText(context, "这台设备没有可用的相机应用，改用相册", Toast.LENGTH_LONG).show()
-            galleryLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-            )
-        }
+    fun startCapture() {
+        captureOpen = true
     }
 
     // Back leaves the current surface (compose/scan/settings -> search -> tab), and only then the app.
@@ -229,6 +183,11 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             day = addDay,
             onCompose = { composing = true },
             onDone = { addMeal = null },
+            onCapture = {
+                captureMeal = addMeal
+                captureDay = addDay
+                startCapture()
+            },
         )
 
         composing -> ComposeDishScreen(
@@ -251,52 +210,6 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
         else -> Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets(0),
-            // Only the diary tab needs the capture buttons; elsewhere they just cover card actions.
-            floatingActionButton = if (tab != 0) {
-                {}
-            } else {
-                {
-                Column(horizontalAlignment = Alignment.End) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SmallFloatingActionButton(
-                            onClick = { listen() },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                        ) {
-                            Icon(painterResource(R.drawable.ic_mic), contentDescription = "语音记餐")
-                        }
-                        SmallFloatingActionButton(
-                            onClick = {
-                                galleryLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                                )
-                            },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                        ) {
-                            Icon(painterResource(R.drawable.ic_gallery), contentDescription = "从相册选")
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    val cameraPress = remember { MutableInteractionSource() }
-                    val cameraHeld by cameraPress.collectIsPressedAsState()
-                    val cameraScale by animateFloatAsState(
-                        targetValue = if (cameraHeld) 0.9f else 1f,
-                        animationSpec = spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMedium),
-                        label = "cameraPress",
-                    )
-                    FloatingActionButton(
-                        onClick = { launchCamera() },
-                        interactionSource = cameraPress,
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.graphicsLayer { scaleX = cameraScale; scaleY = cameraScale },
-                    ) {
-                        Icon(painterResource(R.drawable.ic_camera), contentDescription = "拍照")
-                    }
-                }
-                }
-            },
             bottomBar = {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(
@@ -346,10 +259,10 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             scanUri?.let { uri ->
                 ScanOverlay(
                     uri = uri,
-                    meal = guessMeal(LocalTime.now().hour),
-                    day = LocalDate.now().toEpochDay(),
-                    onDone = { scanUri = null; photoStore.clear() },
-                    onRetake = { scanUri = null; launchCamera() },
+                    meal = captureMeal ?: guessMeal(LocalTime.now().hour),
+                    day = captureDay ?: LocalDate.now().toEpochDay(),
+                    onDone = { scanUri = null; captureMeal = null; captureDay = null; photoStore.clear() },
+                    onRetake = { scanUri = null; startCapture() },
                     onManualAdd = {
                         scanUri = null
                         photoStore.clear()
@@ -366,23 +279,20 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
         }
     }
 
-    if (voiceListening) {
-        VoiceListenDialog(
-            onResult = { spoken ->
-                voiceListening = false
-                voiceVm.resolve(spoken)
+    if (captureOpen) {
+        CaptureScreen(
+            newPhotoFile = { runCatching { photoStore.newFile() }.getOrNull() },
+            onCaptured = { uri ->
+                captureOpen = false
+                scanUri = uri
             },
-            onDismiss = { voiceListening = false },
+            onPicked = { uri ->
+                captureOpen = false
+                scanUri = uri
+            },
+            onClose = { captureOpen = false },
         )
     }
-
-    VoiceLogDialog(
-        state = voiceState,
-        onRemove = voiceVm::remove,
-        onConfirm = { voiceVm.save(LocalDate.now().toEpochDay(), guessMeal(LocalTime.now().hour)) },
-        onSearch = { voiceVm.reset(); tab = 1 },
-        onDismiss = { voiceVm.reset() },
-    )
 
     // Update prompt sits above every screen: important releases must not be missed,
     // optional ones can be postponed for this version only.
