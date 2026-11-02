@@ -12,14 +12,16 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AliasEntity::class,
         DiaryEntryEntity::class,
         ProfileEntity::class,
+        SeedMetaEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun foodDao(): FoodDao
     abstract fun diaryDao(): DiaryDao
     abstract fun profileDao(): ProfileDao
+    abstract fun seedMetaDao(): SeedMetaDao
 
     companion object {
         /** v2 adds the unit so drinks can be shown in ml; existing rows were all grams. */
@@ -36,7 +38,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v4 adds the applied-data-package marker for silent library updates. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(CREATE_SEED_META_SQL)
+            }
+        }
+
         /** Shared with the test so the SQL that ships is the SQL that gets checked. */
+        val CREATE_SEED_META_SQL = """
+            CREATE TABLE IF NOT EXISTS seed_meta (
+                id INTEGER NOT NULL PRIMARY KEY,
+                dataVersion INTEGER NOT NULL,
+                appliedAt INTEGER NOT NULL
+            )
+        """.trimIndent()
+
         val BACKFILL_ML_UNIT_SQL = """
             UPDATE diary_entry SET unit = 'ml'
             WHERE foodId IN (SELECT id FROM food_item WHERE baseUnit = 'ml')

@@ -1,4 +1,4 @@
-package com.daylyfood.app.data.db
+﻿package com.daylyfood.app.data.db
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -71,4 +71,12 @@ data class ProfileEntity(
     val weightKg: Double,
     val activity: Double,
     val goal: String,
+)
+
+/** Which data package version has been applied; 0 means "whatever shipped in the APK". */
+@Entity(tableName = "seed_meta")
+data class SeedMetaEntity(
+    @PrimaryKey val id: Int = 0,
+    val dataVersion: Int,
+    val appliedAt: Long,
 )

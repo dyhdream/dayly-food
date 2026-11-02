@@ -1,0 +1,10 @@
+{
+  "dataVersion": 1,
+  "file": "data-v1.json",
+  "sha256": "1aae9e5a5690cee35f617a925c713bd981f85eb7b7b1f575fe5f3b2f423e41e0",
+  "bytes": 177615,
+  "foods": 428,
+  "servings": 484,
+  "aliases": 274,
+  "minAppVersion": "0.9.0"
+}

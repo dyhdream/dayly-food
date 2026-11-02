@@ -6,9 +6,15 @@
     alias(libs.plugins.hilt)
 }
 
+import org.gradle.api.tasks.Copy
+
 android {
     namespace = "com.daylyfood.app"
     compileSdk = 35
+
+    // Seed CSVs are authored in tools/seed; they are copied in at build time so the bundled
+    // library can never drift from the source (it did once: drink sizes shipped stale).
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/seedAssets"))
 
     defaultConfig {
         applicationId = "com.daylyfood.app"
@@ -89,26 +95,9 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+val syncSeedAssets = tasks.register<Copy>("syncSeedAssets") {
+    from(rootProject.file("tools/seed")) { include("*.csv") }
+    into(layout.buildDirectory.dir("generated/seedAssets/seed"))
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+tasks.named("preBuild") { dependsOn(syncSeedAssets) }

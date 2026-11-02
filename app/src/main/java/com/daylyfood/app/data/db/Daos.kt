@@ -1,4 +1,4 @@
-package com.daylyfood.app.data.db
+﻿package com.daylyfood.app.data.db
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -141,4 +141,14 @@ interface ProfileDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun save(profile: ProfileEntity)
+}
+
+/** Tracks the applied data package so updates are applied once and never rolled back. */
+@Dao
+interface SeedMetaDao {
+    @Query("SELECT * FROM seed_meta WHERE id = 0")
+    suspend fun get(): SeedMetaEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun save(meta: SeedMetaEntity)
 }

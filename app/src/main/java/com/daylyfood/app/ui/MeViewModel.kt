@@ -1,8 +1,9 @@
-package com.daylyfood.app.ui
+﻿package com.daylyfood.app.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.daylyfood.app.data.CacheCleaner
+import com.daylyfood.app.data.DataUpdater
 import com.daylyfood.app.data.ai.AiConfig
 import com.daylyfood.app.data.ai.AiSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class MeViewModel @Inject constructor(
     aiSettings: AiSettings,
     private val cacheCleaner: CacheCleaner,
+    private val dataUpdater: DataUpdater,
 ) : ViewModel() {
 
     val aiConfig: StateFlow<AiConfig> = aiSettings.config
@@ -23,9 +25,15 @@ class MeViewModel @Inject constructor(
     private val _cacheBytes = MutableStateFlow<Long?>(null)
     val cacheBytes: StateFlow<Long?> = _cacheBytes.asStateFlow()
 
+    val dataState: StateFlow<DataUpdater.State> = dataUpdater.state
+    val dataVersion: StateFlow<Int> = dataUpdater.appliedVersion
+
     init {
         refreshCache()
+        viewModelScope.launch { dataUpdater.refreshVersion() }
     }
+
+    fun checkData() = viewModelScope.launch { dataUpdater.checkNow() }
 
     fun refreshCache() = viewModelScope.launch {
         _cacheBytes.value = cacheCleaner.usageBytes()

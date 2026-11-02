@@ -63,6 +63,7 @@ import com.daylyfood.app.data.db.ServingEntity
 import com.daylyfood.app.domain.Nutrition
 import com.daylyfood.app.domain.guessMeal
 import java.time.LocalDate
+import java.util.Locale
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -258,9 +259,9 @@ fun HomeScreen(
     val dayLabel = when (today - day) {
         0L -> "今天"
         1L -> "昨天"
-        else -> dateObj.format(DateTimeFormatter.ofPattern("M月d日"))
+        else -> dateObj.format(DateTimeFormatter.ofPattern("M月d日", Locale.CHINA))
     }
-    val weekday = dateObj.format(DateTimeFormatter.ofPattern("EEEE"))
+    val weekday = dateObj.format(DateTimeFormatter.ofPattern("EEEE", Locale.CHINA))
 
     val target = profile?.let {
         Nutrition.targetKcal(

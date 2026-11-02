@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daylyfood.app.BuildConfig
+import com.daylyfood.app.data.DataUpdater
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.ai.AiConfig
 import kotlin.math.roundToInt
@@ -55,6 +56,8 @@ fun MeScreen(
     val backupState by backupVm.state.collectAsStateWithLifecycle()
     val ai by meVm.aiConfig.collectAsStateWithLifecycle()
     val cacheBytes by meVm.cacheBytes.collectAsStateWithLifecycle()
+    val dataState by meVm.dataState.collectAsStateWithLifecycle()
+    val dataVersion by meVm.dataVersion.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val exportLauncher = rememberLauncherForActivityResult(
@@ -159,6 +162,36 @@ fun MeScreen(
                 "拍照的原图、下载过的更新包会自动清掉；这里只显示还没清的部分。",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        SectionCard {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("食物库数据", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        if (dataVersion > 0) "已更新到第 $dataVersion 版" else "使用安装包内置版本",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                OutlinedButton(
+                    onClick = { meVm.checkData() },
+                    enabled = dataState !is DataUpdater.State.Checking,
+                ) { Text(if (dataState is DataUpdater.State.Checking) "检查中…" else "检查") }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                when (val state = dataState) {
+                    is DataUpdater.State.Applied -> "已更新 ${state.foods} 条食物，下次打开就在库里了。"
+                    is DataUpdater.State.UpToDate -> "已是最新。"
+                    is DataUpdater.State.Failed -> state.message
+                    is DataUpdater.State.Checking -> "正在检查…"
+                    else -> "新增的食材和菜品会自动下载，不用更新 App。"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (dataState is DataUpdater.State.Failed) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 

@@ -1,4 +1,4 @@
-package com.daylyfood.app.di
+﻿package com.daylyfood.app.di
 
 import android.content.Context
 import androidx.room.Room
@@ -6,6 +6,7 @@ import com.daylyfood.app.data.db.AppDatabase
 import com.daylyfood.app.data.db.DiaryDao
 import com.daylyfood.app.data.db.FoodDao
 import com.daylyfood.app.data.db.ProfileDao
+import com.daylyfood.app.data.db.SeedMetaDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +22,11 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "daylyfood_v1.db")
-            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+            .addMigrations(
+                    AppDatabase.MIGRATION_1_2,
+                    AppDatabase.MIGRATION_2_3,
+                    AppDatabase.MIGRATION_3_4,
+                )
             .build()
 
     @Provides
@@ -32,4 +37,7 @@ object DatabaseModule {
 
     @Provides
     fun provideProfileDao(database: AppDatabase): ProfileDao = database.profileDao()
+
+    @Provides
+    fun provideSeedMetaDao(database: AppDatabase): SeedMetaDao = database.seedMetaDao()
 }
