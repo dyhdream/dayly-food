@@ -249,8 +249,6 @@ private fun ResultRow(label: String, value: String) {
 @Composable
 fun HomeScreen(
     onAdd: (String, Long) -> Unit,
-    onVoice: () -> Unit,
-    onCamera: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
 ) {
     val profile by vm.profile.collectAsStateWithLifecycle(null)
@@ -287,22 +285,13 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("每日食记", style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    "$weekday · $dayLabel",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            // Always visible: burying these inside the add screen meant nobody found them.
-            IconButton(onClick = onVoice) {
-                Icon(painterResource(R.drawable.ic_mic), contentDescription = "语音记一餐")
-            }
-            IconButton(onClick = onCamera) {
-                Icon(painterResource(R.drawable.ic_camera), contentDescription = "拍照记一餐")
-            }
+        Column(Modifier.padding(top = 4.dp)) {
+            Text("每日食记", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "$weekday · $dayLabel",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
 
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -245,18 +247,36 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
             },
         ) { padding ->
             Box(Modifier.padding(padding)) {
+                // Two big corner buttons: left talks, right shoots. One per corner stays out of the
+                // way of the numbers while still being the first thing you see.
+                if (tab == 0) {
+                    FloatingActionButton(
+                        onClick = { quickVoice = true },
+                        modifier = Modifier.align(Alignment.BottomStart).padding(start = 16.dp, bottom = 16.dp).zIndex(2f),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ) {
+                        Icon(painterResource(R.drawable.ic_mic), contentDescription = "按住说话记一餐")
+                    }
+                    FloatingActionButton(
+                        onClick = {
+                            captureMeal = guessMeal(LocalTime.now().hour)
+                            captureDay = LocalDate.now().toEpochDay()
+                            startCapture()
+                        },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 16.dp).zIndex(2f),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ) {
+                        Icon(painterResource(R.drawable.ic_camera), contentDescription = "拍照记一餐")
+                    }
+                }
                 Crossfade(targetState = tab, animationSpec = tween(220), label = "tab") { current ->
                     when (current) {
                         0 -> HomeScreen(
                             onAdd = { meal, day ->
                                 addMeal = meal
                                 addDay = day
-                            },
-                            onVoice = { quickVoice = true },
-                            onCamera = {
-                                captureMeal = guessMeal(LocalTime.now().hour)
-                                captureDay = LocalDate.now().toEpochDay()
-                                startCapture()
                             },
                         )
 
