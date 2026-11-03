@@ -48,6 +48,7 @@ fun MeScreen(
     profile: ProfileEntity?,
     onOpenProfile: () -> Unit,
     onOpenAi: () -> Unit,
+    onOpenWeekly: () -> Unit,
     updateVm: UpdateViewModel = hiltViewModel(),
     backupVm: BackupViewModel = hiltViewModel(),
     meVm: MeViewModel = hiltViewModel(),
@@ -101,6 +102,11 @@ fun MeScreen(
                     "${it.heightCm.roundToInt()} cm · ${it.weightKg} kg · ${goalLabel(it.goal)}"
                 } ?: "还没填，先填一下",
                 onClick = onOpenProfile,
+            )
+            EntryLink(
+                title = "本周报告",
+                subtitle = "近 7 天吃了多少、最常吃什么",
+                onClick = onOpenWeekly,
             )
             EntryLink(
                 title = "AI 设置",

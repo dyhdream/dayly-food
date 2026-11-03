@@ -77,6 +77,9 @@ interface DiaryDao {
     @Query("SELECT * FROM diary_entry WHERE epochDay = :day ORDER BY id")
     fun observe(day: Long): Flow<List<DiaryEntryEntity>>
 
+    @Query("SELECT * FROM diary_entry WHERE epochDay BETWEEN :from AND :to ORDER BY epochDay, id")
+    suspend fun between(from: Long, to: Long): List<DiaryEntryEntity>
+
     @Insert
     suspend fun insert(entry: DiaryEntryEntity): Long
 

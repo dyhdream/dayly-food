@@ -180,13 +180,6 @@ fun AiSettingsScreen(
                 onChange = vm::setVision,
             )
             ToggleRow(
-                title = "每日总结",
-                subtitle = "每天总结前一天，会消耗少量额度",
-                checked = config.summaryEnabled,
-                enabled = true,
-                onChange = vm::setSummary,
-            )
-            ToggleRow(
                 title = "联网查菜谱",
                 subtitle = "库里没有的菜，先搜真实做法再解析；按次计费，搜不到不收费",
                 checked = config.webSearch,

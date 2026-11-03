@@ -71,6 +71,8 @@ class AiSettings @Inject constructor(
     private val _config = MutableStateFlow(readConfig())
     val config: StateFlow<AiConfig> = _config.asStateFlow()
 
+    fun weeklyEnabled(): Boolean = readConfig().weeklyEnabled
+
     private fun readConfig(): AiConfig {
         val today = todayEpochDay()
         val used = if (prefs.getLong(KEY_USAGE_DAY, 0L) == today) prefs.getInt(KEY_USAGE_COUNT, 0) else 0
