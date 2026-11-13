@@ -110,7 +110,12 @@ fun PacksScreen(
                     if (row.working) {
                         CircularProgressIndicator(Modifier.height(20.dp))
                     } else if (installed) {
-                        OutlinedButton(onClick = { vm.remove(row.ref.id) }) { Text("移除") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = { vm.remove(row.ref.id) }) { Text("移除") }
+                            if (row.installedVersion < row.ref.version) {
+                                Button(onClick = { vm.install(row.ref.id) }) { Text("更新") }
+                            }
+                        }
                     } else {
                         Button(onClick = { vm.install(row.ref.id) }) { Text("下载") }
                     }

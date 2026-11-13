@@ -25,7 +25,7 @@ META = {
 }
 
 
-def build(pack_id: str) -> None:
+def build(pack_id: str, version: int = 1) -> None:
     meta = META[pack_id]
     source_csv = PACKS / f"{pack_id}.csv"
     foods, servings = [], []
@@ -71,7 +71,7 @@ def build(pack_id: str) -> None:
         "aliases": [],
     }
     body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    file_name = f"pack-{pack_id}-v1.json"
+    file_name = f"pack-{pack_id}-v{version}.json"
     (DATA / file_name).write_bytes(body)
 
     index_path = DATA / "index.json"
@@ -82,7 +82,7 @@ def build(pack_id: str) -> None:
             "id": pack_id,
             "name": meta["name"],
             "desc": meta["desc"],
-            "version": 1,
+            "version": version,
             "file": file_name,
             "sha256": hashlib.sha256(body).hexdigest(),
             "bytes": len(body),
@@ -96,6 +96,6 @@ def build(pack_id: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in META:
-        raise SystemExit(f"usage: build_pack.py <{'|'.join(META)}>")
-    build(sys.argv[1])
+    if len(sys.argv) < 2 or sys.argv[1] not in META:
+        raise SystemExit(f"usage: build_pack.py <{'|'.join(META)}> [version]")
+    build(sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else 1)

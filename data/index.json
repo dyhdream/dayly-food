@@ -12,11 +12,11 @@
       "id": "hengyang",
       "name": "衡阳家常",
       "desc": "米粉、小炒、腊味这类衡阳日常吃法（社区菜谱推算，非实验室数据）",
-      "version": 1,
-      "file": "pack-hengyang-v1.json",
-      "sha256": "adb0c0e49cb9f5d783b168fb67c80a67abbd5eb541ca70d22f7c6ea0b4f42026",
-      "bytes": 2443,
-      "foods": 6
+      "version": 2,
+      "file": "pack-hengyang-v2.json",
+      "sha256": "1d11c4c5bed8b2601fdf2c06e9227e89ed8a5c498444a2188056debd0fb82cea",
+      "bytes": 13515,
+      "foods": 34
     }
   ]
 }
