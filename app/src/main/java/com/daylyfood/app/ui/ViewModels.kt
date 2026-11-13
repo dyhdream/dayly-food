@@ -13,6 +13,7 @@ import com.daylyfood.app.data.db.ProfileDao
 import com.daylyfood.app.data.db.ProfileEntity
 import com.daylyfood.app.data.db.RecentFood
 import com.daylyfood.app.data.db.ServingEntity
+import com.daylyfood.app.domain.SearchQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,7 +135,14 @@ class SearchViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _query.collectLatest { q ->
-                _results.value = if (q.isBlank()) foodDao.recent() else foodDao.search(q.trim())
+                _results.value = if (q.isBlank()) {
+                    foodDao.recent()
+                } else {
+                    // Probe every word and synonym, then let the ranker decide the order.
+                    val probes = SearchQuery.terms(q)
+                    val found = probes.flatMap { foodDao.search(it) }
+                    SearchQuery.rank(found, q.trim()).take(60)
+                }
             }
         }
     }
