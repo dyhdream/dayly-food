@@ -101,10 +101,10 @@ class DataUpdater @Inject constructor(
         }
     }
 
-    private suspend fun apply(pkg: DataPackage) = withContext(Dispatchers.IO) {
+    private suspend fun apply(pkg: DataPackage, packId: String? = null) = withContext(Dispatchers.IO) {
         database.withTransaction {
             val dao = database.foodDao()
-            dao.insertFoods(pkg.foods)
+            dao.insertFoods(if (packId == null) pkg.foods else pkg.foods.map { it.copy(packId = packId) })
             dao.insertServings(pkg.servings)
             dao.insertAliases(pkg.aliases)
             database.seedMetaDao().save(
@@ -118,7 +118,7 @@ class DataUpdater @Inject constructor(
         var lastError: Exception? = null
         for (base in HOSTS) {
             try {
-                val json = JSONObject(fetchBytes(base + "index.json").decodeToString())
+                val json = JSONObject(fetchBytes(base + "index.json" + cacheBuster()).decodeToString())
                 return@withContext Index(
                     dataVersion = json.getInt("dataVersion"),
                     file = json.getString("file"),
@@ -132,6 +132,58 @@ class DataUpdater @Inject constructor(
         }
         throw lastError ?: IOException("数据源不可用")
     }
+
+    // ---- regional packs ----------------------------------------------------
+    // Same JSON format as the base package; only the rows are tagged with a pack id so a pack can
+    // be removed again without touching the built-in library.
+
+    fun installedPackVersion(packId: String): Int = prefs.getInt(packKey(packId), 0)
+
+    suspend fun packCatalog(): Result<List<PackRef>> = withContext(Dispatchers.IO) {
+        runCatching { fetchIndexJson().let { PackCatalog.parse(it.second) } }
+    }
+
+    suspend fun installPack(packId: String): Result<Int> = withContext(Dispatchers.IO) {
+        runCatching {
+            val (base, json) = fetchIndexJson()
+            val ref = PackCatalog.parse(json).firstOrNull { it.id == packId }
+                ?: error("清单里没有这个菜品包")
+            val bytes = fetchBytes(base + ref.file)
+            require(sha256(bytes).equals(ref.sha256, ignoreCase = true)) { "菜品包校验不通过，已放弃" }
+            val pkg = DataPackage.parse(bytes.decodeToString()).getOrThrow()
+            apply(pkg, packId = packId)
+            prefs.edit().putInt(packKey(packId), ref.version).apply()
+            pkg.foods.size
+        }
+    }
+
+    suspend fun removePack(packId: String) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            val dao = database.foodDao()
+            dao.deletePackServings(packId)
+            dao.deletePackAliases(packId)
+            dao.deletePackFoods(packId)
+        }
+        prefs.edit().remove(packKey(packId)).apply()
+    }
+
+    /** Index body plus the host it came from, so pack files resolve against the same mirror. */
+    private suspend fun fetchIndexJson(): Pair<String, String> = withContext(Dispatchers.IO) {
+        var lastError: Exception? = null
+        for (base in HOSTS) {
+            try {
+                return@withContext base to fetchBytes(base + "index.json" + cacheBuster()).decodeToString()
+            } catch (e: Exception) {
+                lastError = e
+            }
+        }
+        throw lastError ?: IOException("数据源不可用")
+    }
+
+    private fun packKey(packId: String) = "pack_$packId"
+
+    /** jsDelivr caches the branch; a changing query key makes a fresh deploy visible within the hour. */
+    private fun cacheBuster(): String = "?h=" + (System.currentTimeMillis() / 3_600_000L)
 
     private suspend fun fetchBytes(url: String): ByteArray = withContext(Dispatchers.IO) {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {

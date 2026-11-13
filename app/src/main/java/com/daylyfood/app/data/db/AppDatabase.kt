@@ -14,7 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ProfileEntity::class,
         SeedMetaEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,6 +39,13 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         /** v4 adds the applied-data-package marker for silent library updates. */
+        /** v5 lets regional packs be added and removed without touching base food. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE food_item ADD COLUMN packId TEXT")
+            }
+        }
+
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(CREATE_SEED_META_SQL)

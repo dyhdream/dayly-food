@@ -62,6 +62,18 @@ interface FoodDao {
     @Query("SELECT MAX(CAST(SUBSTR(id, 2) AS INTEGER)) FROM food_serving WHERE id LIKE 'S%'")
     suspend fun maxServingNumber(): Int?
 
+    @Query("DELETE FROM food_serving WHERE foodId IN (SELECT id FROM food_item WHERE packId = :packId)")
+    suspend fun deletePackServings(packId: String)
+
+    @Query("DELETE FROM food_alias WHERE foodId IN (SELECT id FROM food_item WHERE packId = :packId)")
+    suspend fun deletePackAliases(packId: String)
+
+    @Query("DELETE FROM food_item WHERE packId = :packId")
+    suspend fun deletePackFoods(packId: String)
+
+    @Query("SELECT COUNT(*) FROM food_item WHERE packId = :packId")
+    suspend fun packFoodCount(packId: String): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFoods(items: List<FoodEntity>)
 

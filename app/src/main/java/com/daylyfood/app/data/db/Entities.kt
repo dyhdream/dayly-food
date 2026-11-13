@@ -24,6 +24,8 @@ data class FoodEntity(
     val confidence: String,
     val verified: Boolean,
     val notes: String?,
+    /** null = shipped with the app; otherwise the regional pack it was mounted from. */
+    val packId: String? = null,
 )
 
 @Entity(tableName = "food_serving")

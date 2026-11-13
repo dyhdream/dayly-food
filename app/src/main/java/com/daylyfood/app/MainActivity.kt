@@ -83,6 +83,7 @@ import com.daylyfood.app.ui.UpdateDialog
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.daylyfood.app.ui.VoiceUiState
 import com.daylyfood.app.ui.Waveform
+import com.daylyfood.app.ui.PacksScreen
 import com.daylyfood.app.ui.VoiceHoldButton
 import com.daylyfood.app.ui.WeeklyReportScreen
 import com.daylyfood.app.ui.VoiceLogDialog
@@ -228,6 +229,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
 
         settingsPage == "ai" -> AiSettingsScreen(onBack = { settingsPage = null })
         settingsPage == "weekly" -> WeeklyReportScreen(onBack = { settingsPage = null })
+        settingsPage == "packs" -> PacksScreen(onBack = { settingsPage = null })
 
         else -> Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -326,6 +328,7 @@ fun AppRoot(root: RootViewModel = hiltViewModel()) {
                             onOpenProfile = { settingsPage = "profile" },
                             onOpenAi = { settingsPage = "ai" },
                             onOpenWeekly = { settingsPage = "weekly" },
+                            onOpenPacks = { settingsPage = "packs" },
                         )
                     }
                 }

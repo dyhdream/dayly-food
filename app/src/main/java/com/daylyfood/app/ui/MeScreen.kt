@@ -49,6 +49,7 @@ fun MeScreen(
     onOpenProfile: () -> Unit,
     onOpenAi: () -> Unit,
     onOpenWeekly: () -> Unit,
+    onOpenPacks: () -> Unit,
     updateVm: UpdateViewModel = hiltViewModel(),
     backupVm: BackupViewModel = hiltViewModel(),
     meVm: MeViewModel = hiltViewModel(),
@@ -102,6 +103,11 @@ fun MeScreen(
                     "${it.heightCm.roundToInt()} cm · ${it.weightKg} kg · ${goalLabel(it.goal)}"
                 } ?: "还没填，先填一下",
                 onClick = onOpenProfile,
+            )
+            EntryLink(
+                title = "地区菜品包",
+                subtitle = "衡阳等地的地方菜，按需下载",
+                onClick = onOpenPacks,
             )
             EntryLink(
                 title = "本周报告",
