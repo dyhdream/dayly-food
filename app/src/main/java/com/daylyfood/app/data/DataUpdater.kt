@@ -114,23 +114,29 @@ class DataUpdater @Inject constructor(
         _appliedVersion.value = pkg.dataVersion
     }
 
+    /**
+     * Every mirror is asked, because CDNs cache the branch: the freshest answer wins instead of
+     * whichever mirror happens to reply first (that is how a new pack stayed invisible for hours).
+     */
     private suspend fun fetchIndex(): Index = withContext(Dispatchers.IO) {
         var lastError: Exception? = null
+        var best: Index? = null
         for (base in HOSTS) {
             try {
                 val json = JSONObject(fetchBytes(base + "index.json" + cacheBuster()).decodeToString())
-                return@withContext Index(
+                val candidate = Index(
                     dataVersion = json.getInt("dataVersion"),
                     file = json.getString("file"),
                     sha256 = json.getString("sha256"),
                     minAppVersion = json.optString("minAppVersion").ifBlank { "0.0.0" },
                     base = base,
                 )
+                if (best == null || candidate.dataVersion > best.dataVersion) best = candidate
             } catch (e: Exception) {
                 lastError = e
             }
         }
-        throw lastError ?: IOException("数据源不可用")
+        best ?: throw (lastError ?: IOException("数据源不可用"))
     }
 
     // ---- regional packs ----------------------------------------------------
@@ -170,14 +176,21 @@ class DataUpdater @Inject constructor(
     /** Index body plus the host it came from, so pack files resolve against the same mirror. */
     private suspend fun fetchIndexJson(): Pair<String, String> = withContext(Dispatchers.IO) {
         var lastError: Exception? = null
+        var best: Pair<String, String>? = null
+        var bestScore = -1
         for (base in HOSTS) {
             try {
-                return@withContext base to fetchBytes(base + "index.json" + cacheBuster()).decodeToString()
+                val body = fetchBytes(base + "index.json" + cacheBuster()).decodeToString()
+                val score = PackCatalog.parse(body).maxOfOrNull { it.version } ?: 0
+                if (score > bestScore) {
+                    bestScore = score
+                    best = base to body
+                }
             } catch (e: Exception) {
                 lastError = e
             }
         }
-        throw lastError ?: IOException("数据源不可用")
+        best ?: throw (lastError ?: IOException("数据源不可用"))
     }
 
     private fun packKey(packId: String) = "pack_$packId"
